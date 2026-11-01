@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import sys
 import threading
 import time
@@ -127,7 +128,7 @@ def tech_line(station):
 def main(argv=None):
     argv = list(sys.argv if argv is None else argv)
     try:
-        from PySide6.QtCore import Qt, QTimer, QObject, Signal, QSize
+        from PySide6.QtCore import QEvent, Qt, QTimer, QObject, Signal, QSize
         from PySide6.QtGui import QColor, QFont, QKeyEvent, QPalette
         from PySide6.QtWidgets import (
             QApplication,
@@ -160,6 +161,29 @@ def main(argv=None):
         results = Signal(int, object, str)
         played = Signal(int, str)
         devices = Signal(object)
+
+    # Keys the window owns even while the station list has focus. Without this
+    # the list's type-to-find swallows the letters, and Enter double-fires.
+    LIST_KEYS = {
+        Qt.Key_Space,
+        Qt.Key_J,
+        Qt.Key_K,
+        Qt.Key_F,
+        Qt.Key_N,
+        Qt.Key_P,
+        Qt.Key_M,
+        Qt.Key_S,
+        Qt.Key_A,
+        Qt.Key_Slash,
+        Qt.Key_Return,
+        Qt.Key_Enter,
+    }
+
+    def quiet(button):
+        # Buttons are for the mouse. Every one has a key, and a focused button
+        # would take Space for itself instead of play and pause.
+        button.setFocusPolicy(Qt.NoFocus)
+        return button
 
     class Window(QMainWindow):
         def __init__(self):
@@ -200,6 +224,29 @@ def main(argv=None):
             self.clock.start(1000)
             threading.Thread(target=self._load_devices, daemon=True).start()
             self.search()
+            self.list.setFocus()
+
+        @contextlib.contextmanager
+        def _try_lock(self):
+            # A worker holds the lock while mpv tunes or restarts. The UI must
+            # never wait on that; callers fall back to updating state only.
+            got = self.lock.acquire(blocking=False)
+            try:
+                yield got
+            finally:
+                if got:
+                    self.lock.release()
+
+        def eventFilter(self, watched, event):
+            if (
+                watched is self.list
+                and event.type() == QEvent.KeyPress
+                and event.key() in LIST_KEYS
+                and not event.modifiers() & Qt.ControlModifier
+            ):
+                self.keyPressEvent(event)
+                return True
+            return super().eventFilter(watched, event)
 
         def _build(self):
             root = QWidget()
@@ -222,9 +269,9 @@ def main(argv=None):
             titles.addWidget(self.header_status)
             bar.addLayout(titles)
             bar.addStretch(1)
-            self.sleep_btn = QPushButton("Sleep")
+            self.sleep_btn = quiet(QPushButton("Sleep"))
             self.sleep_btn.clicked.connect(self.cycle_sleep)
-            self.mute_btn = QPushButton("Mute")
+            self.mute_btn = quiet(QPushButton("Mute"))
             self.mute_btn.clicked.connect(self.toggle_mute)
             bar.addWidget(self.sleep_btn)
             bar.addWidget(self.mute_btn)
@@ -275,7 +322,7 @@ def main(argv=None):
                 genre_row.setContentsMargins(0, 0, 0, 0)
                 genre_row.setSpacing(2)
                 for genre_id, label in chunk:
-                    button = QPushButton(label)
+                    button = quiet(QPushButton(label))
                     button.setObjectName("chip")
                     button.setFlat(True)
                     button.setCursor(Qt.PointingHandCursor)
@@ -292,7 +339,7 @@ def main(argv=None):
             self.scope_group.setExclusive(True)
             self.scope_buttons = {}
             for key, label in (("dial", "Dial"), ("saved", "Saved"), ("mine", "Mine")):
-                button = QPushButton(label)
+                button = quiet(QPushButton(label))
                 button.setObjectName("ghost")
                 button.setFlat(True)
                 button.setCursor(Qt.PointingHandCursor)
@@ -303,7 +350,7 @@ def main(argv=None):
                 self.scope_buttons[key] = button
                 scopes.addWidget(button)
             scopes.addStretch(1)
-            add = QPushButton("Add")
+            add = quiet(QPushButton("Add"))
             add.clicked.connect(self.add_dialog)
             scopes.addWidget(add)
             left_box.addLayout(scopes)
@@ -315,8 +362,9 @@ def main(argv=None):
             self.list = QListWidget()
             self.list.setSpacing(2)
             self.list.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-            self.list.itemActivated.connect(self.on_activate)
+            self.list.itemClicked.connect(self.on_click)
             self.list.currentRowChanged.connect(self.on_row)
+            self.list.installEventFilter(self)
             left_box.addWidget(self.list, 1)
             body.addWidget(left, 1)
 
@@ -342,12 +390,12 @@ def main(argv=None):
             self.err.setWordWrap(True)
             self.err.hide()
             transport = QHBoxLayout()
-            prev = QPushButton("Prev")
+            prev = quiet(QPushButton("Prev"))
             prev.clicked.connect(lambda: self.step(-1))
-            self.play_btn = QPushButton("▶")
+            self.play_btn = quiet(QPushButton("▶"))
             self.play_btn.setObjectName("play")
             self.play_btn.clicked.connect(self.toggle)
-            nxt = QPushButton("Next")
+            nxt = quiet(QPushButton("Next"))
             nxt.clicked.connect(lambda: self.step(1))
             transport.addWidget(prev)
             transport.addWidget(self.play_btn)
@@ -490,9 +538,19 @@ def main(argv=None):
             else:
                 self.count.setText(f"{label}    {len(rows)}")
 
+        @staticmethod
+        def _row_style(selected):
+            return "background:#161616;border-radius:12px;" if selected else "background:transparent;"
+
+        def _style_row(self, row, selected):
+            item = self.list.item(row) if row >= 0 else None
+            widget = self.list.itemWidget(item) if item is not None else None
+            if widget is not None and shiboken6.isValid(widget):
+                widget.setStyleSheet(self._row_style(selected))
+
         def _row(self, station, index, saved):
             wrap = QWidget()
-            wrap.setStyleSheet("background:#161616;border-radius:12px;" if index == self.selected else "background:transparent;")
+            wrap.setStyleSheet(self._row_style(index == self.selected))
             box = QHBoxLayout(wrap)
             box.setContentsMargins(12, 6, 6, 6)
             text = QVBoxLayout()
@@ -509,7 +567,7 @@ def main(argv=None):
                 meta = QLabel(f"{rate}")
                 meta.setStyleSheet("color:#6f6a64;font-size:11px;background:transparent;")
                 box.addWidget(meta)
-            star = QPushButton("★" if saved else "☆")
+            star = quiet(QPushButton("★" if saved else "☆"))
             star.setFlat(True)
             star.setFixedWidth(32)
             star.setStyleSheet(
@@ -546,10 +604,23 @@ def main(argv=None):
 
         def on_row(self, row):
             if row >= 0:
+                if row != self.selected:
+                    self._style_row(self.selected, False)
                 self.selected = row
+                self._style_row(row, True)
 
-        def on_activate(self, _item):
-            self.play_index(self.list.currentRow())
+        def on_click(self, item):
+            row = self.list.row(item)
+            rows = self.visible()
+            if row < 0 or row >= len(rows):
+                return
+            if (
+                self.current
+                and rows[row]["id"] == self.current["id"]
+                and self.status in ("playing", "connecting")
+            ):
+                return
+            self.play_index(row)
 
         def search(self):
             if self._closing:
@@ -622,19 +693,23 @@ def main(argv=None):
                 self.error = message
                 self.started = None
             else:
+                with self.lock:
+                    # Volume, mute, balance or tone may have moved while tuning.
+                    self.player.sync()
                 self.status = "playing"
                 self.error = ""
                 self.started = time.time()
             self.refresh_stage()
 
         def toggle(self):
-            with self.lock:
+            with self._try_lock() as got:
+                if not got:
+                    return  # still tuning
                 alive = self.player.alive()
-                paused = self.player.paused
-            if alive:
-                with self.lock:
+                if alive:
                     self.player.toggle()
                     paused = self.player.paused
+            if alive:
                 self.status = "paused" if paused else "playing"
                 self.refresh_stage()
                 return
@@ -669,8 +744,8 @@ def main(argv=None):
             self.fill()
 
         def toggle_mute(self):
-            with self.lock:
-                self.player.toggle_mute()
+            with self._try_lock() as got:
+                self.player.toggle_mute(send=got)
                 muted = self.player.muted
                 volume = self.player.volume
             self.mute_btn.setText("Muted" if muted else "Mute")
@@ -680,8 +755,8 @@ def main(argv=None):
             self.vol_label.setText("0" if muted else str(volume))
 
         def on_volume(self, value):
-            with self.lock:
-                self.player.set_volume(value)
+            with self._try_lock() as got:
+                self.player.set_volume(value, send=got)
             self.vol_label.setText(str(value))
             self.mute_btn.setText("Mute")
             self.lib["volume"] = value
@@ -720,20 +795,18 @@ def main(argv=None):
             if self.player.url:
                 threading.Thread(target=work, daemon=True).start()
             else:
-                with self.lock:
-                    self.player.device = device
                 self._sync_route_label()
 
         def on_balance(self, value):
-            with self.lock:
-                self.player.set_balance(value / 10)
+            with self._try_lock() as got:
+                self.player.set_balance(value / 10, send=got)
             self.balance_label.setText(self._balance_text())
             self._remember_route()
 
         def on_eq(self, _index):
             eq = self.eq_box.currentData()
-            with self.lock:
-                self.player.set_eq(eq)
+            with self._try_lock() as got:
+                self.player.set_eq(eq, send=got)
             self._remember_route()
 
         def _remember_route(self):
@@ -746,10 +819,11 @@ def main(argv=None):
             self._sync_route_label()
 
         def _load_devices(self):
-            with self.lock:
-                if self._closing:
-                    return
-                found = self.player.devices()
+            if self._closing:
+                return
+            # Probing runs `mpv --audio-device=help`; it shares no state, so it
+            # must not hold the lock the UI needs.
+            found = self.player.devices()
             if not found:
                 found = [{"id": "auto", "label": "System default"}]
             elif not any(item["id"] == "auto" for item in found):
@@ -869,16 +943,17 @@ def main(argv=None):
             if self._closing:
                 return
             if self.sleep_at and time.time() >= self.sleep_at:
-                with self.lock:
-                    if self.player.alive() and not self.player.paused:
+                with self._try_lock() as got:
+                    if got and self.player.alive() and not self.player.paused:
                         self.player.toggle()
-                self.sleep_at = None
-                self.sleep_btn.setText("Sleep")
-                self.status = "paused"
-                self.refresh_stage()
+                if got:  # otherwise mpv is busy tuning; try again next tick
+                    self.sleep_at = None
+                    self.sleep_btn.setText("Sleep")
+                    self.status = "paused"
+                    self.refresh_stage()
             if self.status == "playing":
-                with self.lock:
-                    alive = self.player.alive()
+                with self._try_lock() as got:
+                    alive = self.player.alive() if got else True
                 if not alive:
                     self.status = "error"
                     self.error = "The stream ended."

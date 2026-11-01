@@ -16,7 +16,7 @@ Open **Vela** from your applications. A new terminal can also run `vela`, or `ve
 
 The list is the directory. Type in **Search stations**, or a **Country**, or pick a genre. **Dial** is the directory, **Saved** is what you starred, **Mine** is a stream you added.
 
-Click a row to play it. The amber button pauses. **Prev** and **Next** move through the list you are looking at. The star saves a station.
+Click a row to play it. The round button plays and pauses. **Prev** and **Next** move through the list you are looking at. The star saves a station.
 
 **Add** asks for a name and an `http://` or `https://` address.
 
