@@ -34,14 +34,16 @@ export function Terminal(props: DialProps) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col font-mono text-sm">
-      <div className="flex items-center justify-between gap-3 border-b border-line px-4 py-2 text-muted">
-        <span>terminal</span>
-        <span className="truncate">
+      <div className="flex h-10 items-center gap-2 border-b border-line px-4 font-mono text-[11px] uppercase tracking-[0.16em] text-muted">
+        <span className="text-dial">vela</span>
+        <span aria-hidden="true">/</span>
+        <span className="truncate normal-case tracking-normal">
           {props.scope}
           {props.tag ? ` · ${props.tag}` : ""}
           {props.country ? ` · ${props.country}` : ""}
           {props.query ? ` · ${props.query}` : ""}
         </span>
+        <span className="ml-auto shrink-0">{status}</span>
       </div>
       <div className="flex gap-2 overflow-x-auto border-b border-line px-3 py-2 vela-scroll">
         {GENRES.map((genre) => {
@@ -101,12 +103,12 @@ export function Terminal(props: DialProps) {
         />
       )}
       <div className="border-t border-line px-4 py-3">
-        <p className="text-muted">now</p>
-        <p className="truncate text-base text-fg">{current?.name ?? "nothing on the air"}</p>
-        <p className="truncate text-muted">
-          {current ? techLine(current) || "your stream" : "pick a station"}
-          {" · "}
-          {status}
+        <div className="flex items-baseline justify-between gap-4">
+          <p className="min-w-0 truncate text-base text-fg">{current?.name ?? "nothing on the air"}</p>
+          <p className="shrink-0 text-muted">{status}</p>
+        </div>
+        <p className="mt-1 truncate text-muted">
+          {current ? techLine(current) || "custom stream" : "pick a station"}
           {" · vol "}
           {muted ? 0 : Math.round(volume * 100)}
           {engine.sleepLeft != null ? ` · sleep ${formatClock(engine.sleepLeft)}` : ""}
@@ -129,7 +131,7 @@ export function Terminal(props: DialProps) {
           autoComplete="off"
         />
       </form>
-      <p className="flex flex-wrap gap-x-4 gap-y-1 px-4 py-2 text-muted">
+      <p className="hidden gap-x-4 px-4 py-2 text-muted sm:flex">
         <span>j k move</span>
         <span>enter play</span>
         <span>f save</span>

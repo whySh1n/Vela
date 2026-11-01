@@ -7,7 +7,7 @@ import { SkeletonRows, StationRows } from "@/components/vela/rows";
 import type { DialProps } from "@/components/vela/dial";
 
 const field =
-  "h-11 w-full rounded-md border border-line bg-bg px-3 text-fg placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dial";
+  "h-11 w-full rounded-md border border-line bg-bg px-3 text-sm text-fg placeholder:text-muted/80 focus-visible:border-dial";
 
 export function Desk(props: DialProps) {
   const engine = useEngine();
@@ -29,27 +29,32 @@ export function Desk(props: DialProps) {
 
   const eyebrow =
     engine.rested && engine.status !== "playing"
-      ? "RESTED"
+      ? "Rested"
       : engine.status === "playing"
-        ? "ON AIR"
+        ? "On air"
         : engine.status === "connecting"
-          ? "TUNING"
+          ? "Tuning"
           : engine.status === "paused"
-            ? "PAUSED"
+            ? "Paused"
             : engine.status === "error"
-              ? "OFF AIR"
-              : "QUIET";
+              ? "Off air"
+              : "Quiet";
+
+  const countLabel =
+    props.loading && props.scope === "dial" && props.stations.length === 0
+      ? "Searching"
+      : `${props.stations.length}`;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
       <section className="flex min-h-0 min-w-0 flex-1 flex-col">
-        <div className="flex flex-col gap-3 border-b border-line px-4 py-3">
+        <div className="flex flex-col gap-3 px-4 pt-3 sm:px-5">
           <div className="flex flex-col gap-2 sm:flex-row">
             <input
               id="vela-search"
               value={props.query}
               onChange={(event) => props.onQuery(event.target.value)}
-              placeholder="Search the dial"
+              placeholder="Search stations"
               aria-label="Search stations"
               className={field}
               autoComplete="off"
@@ -57,13 +62,13 @@ export function Desk(props: DialProps) {
             <input
               value={props.country}
               onChange={(event) => props.onCountry(event.target.value)}
-              placeholder="Place"
+              placeholder="Country"
               aria-label="Country or place"
-              className={field + " sm:w-40"}
+              className={field + " sm:w-44"}
               autoComplete="off"
             />
           </div>
-          <div className="flex gap-2 overflow-x-auto vela-scroll">
+          <div className="flex gap-1.5 overflow-x-auto vela-scroll">
             {GENRES.map((genre) => {
               const active = props.tag === genre.id && props.scope === "dial";
               return (
@@ -73,8 +78,10 @@ export function Desk(props: DialProps) {
                   aria-pressed={active}
                   onClick={() => props.onTag(genre.id)}
                   className={
-                    "h-11 shrink-0 rounded-md px-3 text-sm " +
-                    (active ? "bg-dial text-dial-ink" : "bg-surface text-muted")
+                    "h-11 shrink-0 rounded-full border px-3.5 text-sm " +
+                    (active
+                      ? "border-transparent bg-dial text-dial-ink"
+                      : "border-line bg-transparent text-muted hover:border-muted hover:text-fg")
                   }
                 >
                   {genre.label}
@@ -82,68 +89,66 @@ export function Desk(props: DialProps) {
               );
             })}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="-mx-4 flex items-center border-b border-line px-2 sm:-mx-5 sm:px-3">
+            <ScopeButton label="Dial" active={props.scope === "dial"} onClick={() => props.onScope("dial")} />
             <ScopeButton
-              label="Dial"
-              active={props.scope === "dial"}
-              onClick={() => props.onScope("dial")}
-            />
-            <ScopeButton
-              label={`Saved ${props.savedCount || ""}`.trim()}
+              label="Saved"
+              count={props.savedCount}
               active={props.scope === "saved"}
               onClick={() => props.onScope("saved")}
             />
             <ScopeButton
-              label={`Mine ${props.mineCount || ""}`.trim()}
+              label="Mine"
+              count={props.mineCount}
               active={props.scope === "mine"}
               onClick={() => props.onScope("mine")}
             />
             <button
               type="button"
               onClick={props.onOpenAdd}
-              className="ml-auto inline-flex h-11 items-center gap-2 rounded-md px-3 text-sm text-muted"
+              className="ml-auto inline-flex h-11 items-center gap-1.5 rounded-md px-3 text-sm text-muted hover:bg-surface hover:text-fg"
             >
               <Plus className="size-4" />
               Add
             </button>
           </div>
         </div>
+        <div className="flex items-center justify-between px-4 pt-3 pb-1 font-mono text-[10px] uppercase tracking-[0.16em] text-muted sm:px-5">
+          <span>{props.scope === "dial" ? "Directory" : props.scope === "saved" ? "Saved" : "Your streams"}</span>
+          <span className="tabular-nums">{countLabel}</span>
+        </div>
         <ListBody {...props} currentId={current?.id ?? null} />
       </section>
 
-      <aside className="flex shrink-0 flex-col gap-4 border-t border-line bg-surface px-4 py-4 lg:w-96 lg:border-t-0 lg:border-l lg:px-6 lg:py-6">
-        <div className="flex items-center gap-3 lg:hidden">
+      <aside className="flex shrink-0 flex-col border-t border-line bg-surface lg:w-[22rem] lg:border-t-0 lg:border-l">
+        <div className="flex items-center gap-3 px-4 py-3 lg:hidden">
           <Mark live={playing} label={current ? monogram(current.name) : "·"} />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-base">{current?.name ?? "Nothing on the air"}</p>
+            <p className="truncate text-[15px] font-medium">{current?.name ?? "No station"}</p>
             <p className="truncate text-sm text-muted">{statusLine(engine.status, engine.error, engine.rested)}</p>
           </div>
-          <PlayButton
-            playing={playing}
-            connecting={connecting}
-            disabled={!current}
-            onClick={engine.toggle}
-          />
+          <PlayButton playing={playing} connecting={connecting} disabled={!current} onClick={engine.toggle} />
         </div>
 
-        <div className="hidden min-h-0 flex-1 flex-col gap-6 lg:flex">
-          <p className="font-mono text-sm tracking-wide text-dial">{eyebrow}</p>
+        <div className="hidden min-h-0 flex-1 flex-col px-6 py-6 lg:flex">
+          <p className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.18em] text-dial">
+            {playing ? <span className="size-1.5 rounded-full bg-dial" /> : null}
+            {eyebrow}
+          </p>
           <Mark large live={playing} label={current ? monogram(current.name) : "·"} />
-          <div>
-            <h2 className="text-3xl font-medium text-balance">
-              {current?.name ?? "Nothing on the air"}
+          <div className="mt-6">
+            <h2 className="text-[1.75rem] font-medium leading-tight tracking-tight text-balance">
+              {current?.name ?? "No station"}
             </h2>
-            <p className="mt-2 text-pretty text-muted">
-              {current
-                ? techLine(current) || "Your stream"
-                : "Choose a station. Star the ones you want to keep."}
+            <p className="mt-2 font-mono text-sm text-pretty text-muted">
+              {current ? techLine(current) || "Custom stream" : "Pick a station from the directory."}
             </p>
           </div>
-          {engine.error ? <p className="text-sm text-fg">{engine.error}</p> : null}
+          {engine.error ? <p className="mt-4 text-sm text-pretty text-fg">{engine.error}</p> : null}
           {engine.rested && engine.status !== "playing" ? (
-            <p className="text-sm text-muted">The dial rested.</p>
+            <p className="mt-4 text-sm text-muted">The dial rested.</p>
           ) : null}
-          <div className="mt-auto flex items-center gap-3">
+          <div className="mt-auto flex items-center gap-1 pt-8">
             <IconButton label="Previous station" onClick={() => step(-1)} disabled={props.stations.length === 0}>
               <SkipBack className="size-4" />
             </IconButton>
@@ -160,8 +165,9 @@ export function Desk(props: DialProps) {
               <SkipForward className="size-4" />
             </IconButton>
             {engine.listened > 0 ? (
-              <span className="ml-auto font-mono text-sm text-muted tabular-nums">
-                on for {formatClock(engine.listened)}
+              <span className="ml-auto text-right">
+                <span className="block font-mono text-sm tabular-nums text-fg">{formatClock(engine.listened)}</span>
+                <span className="block font-mono text-[10px] uppercase tracking-[0.16em] text-muted">Elapsed</span>
               </span>
             ) : null}
           </div>
@@ -170,22 +176,24 @@ export function Desk(props: DialProps) {
               href={current.homepage}
               target="_blank"
               rel="noreferrer"
-              className="text-sm text-muted underline-offset-4 hover:text-fg hover:underline"
+              className="mt-5 text-sm text-muted underline-offset-4 hover:text-fg hover:underline"
             >
               Station site
             </a>
           ) : null}
         </div>
 
-        <label className="flex items-center gap-3 text-sm text-muted">
-          <span className="w-8 shrink-0 font-mono tabular-nums">{muted ? 0 : Math.round(volume * 100)}</span>
+        <label className="flex items-center gap-3 border-t border-line px-4 py-3 text-sm text-muted lg:px-6">
+          <span className="w-8 shrink-0 font-mono text-xs tabular-nums text-fg">
+            {muted ? 0 : Math.round(volume * 100)}
+          </span>
           <input
             type="range"
             min={0}
             max={100}
             value={Math.round((muted ? 0 : volume) * 100)}
             aria-label="Volume"
-            className="w-full"
+            className="vela-volume w-full"
             onChange={(event) => setVolume(Number(event.target.value) / 100)}
           />
         </label>
@@ -207,22 +215,30 @@ function ListBody({
   if (loading && stations.length === 0 && scope === "dial") return <SkeletonRows />;
   if (error && stations.length === 0 && scope === "dial") {
     return (
-      <div className="flex flex-1 flex-col items-start gap-3 px-4 py-8">
-        <p className="text-pretty text-muted">{error}</p>
-        <button type="button" onClick={onRetry} className="h-11 rounded-md bg-dial px-4 text-sm text-dial-ink">
+      <div className="flex flex-1 flex-col items-start justify-center gap-3 px-5 py-16">
+        <p className="text-base text-fg">Directory unavailable</p>
+        <p className="max-w-sm text-sm text-pretty text-muted">{error}</p>
+        <button type="button" onClick={onRetry} className="mt-1 h-11 rounded-md bg-dial px-4 text-sm font-medium text-dial-ink">
           Try again
         </button>
       </div>
     );
   }
   if (stations.length === 0) {
+    const title =
+      scope === "saved" ? "No saved stations" : scope === "mine" ? "No streams yet" : "No matches";
     const message =
       scope === "saved"
-        ? "Nothing saved yet. Star a station and it stays on this dial."
+        ? "Star a station and it stays on this dial."
         : scope === "mine"
-          ? "No streams of your own yet."
-          : "Nothing under that name.";
-    return <p className="px-4 py-8 text-pretty text-muted">{message}</p>;
+          ? "Add a stream address and it plays from here."
+          : "Try another name, or a different country.";
+    return (
+      <div className="flex flex-1 flex-col justify-center px-5 py-16">
+        <p className="text-base text-fg">{title}</p>
+        <p className="mt-1 max-w-sm text-sm text-pretty text-muted">{message}</p>
+      </div>
+    );
   }
   return (
     <StationRows
@@ -237,10 +253,12 @@ function ListBody({
 
 function ScopeButton({
   label,
+  count,
   active,
   onClick,
 }: {
   label: string;
+  count?: number;
   active: boolean;
   onClick: () => void;
 }) {
@@ -249,9 +267,13 @@ function ScopeButton({
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={"h-11 rounded-md px-3 text-sm " + (active ? "bg-surface-2 text-fg" : "text-muted")}
+      className={
+        "inline-flex h-11 items-center gap-2 -mb-px border-b-2 px-3 text-sm " +
+        (active ? "border-dial text-fg" : "border-transparent text-muted hover:text-fg")
+      }
     >
       {label}
+      {count ? <span className="font-mono text-xs tabular-nums text-muted">{count}</span> : null}
     </button>
   );
 }
@@ -260,11 +282,12 @@ function Mark({ live, label, large }: { live: boolean; label: string; large?: bo
   return (
     <span
       className={
-        "grid shrink-0 place-items-center rounded-sm border border-line bg-bg font-mono text-dial " +
-        (large ? "size-20 text-xl" : "size-11 text-sm") +
-        (live ? " vela-live" : "")
+        "relative grid shrink-0 place-items-center rounded-sm border bg-bg font-mono tracking-wide text-dial " +
+        (large ? "mt-8 size-24 text-2xl " : "size-11 text-sm ") +
+        (live ? "border-dial" : "border-line")
       }
     >
+      {live && large ? <span className="absolute top-2.5 right-2.5 size-1.5 rounded-full bg-dial" /> : null}
       {label}
     </span>
   );
@@ -287,7 +310,7 @@ function PlayButton({
       aria-label={playing ? "Pause" : "Play"}
       disabled={disabled}
       onClick={onClick}
-      className="grid size-14 shrink-0 place-items-center rounded-full bg-dial text-dial-ink disabled:opacity-40"
+      className="grid size-14 shrink-0 place-items-center rounded-full bg-dial text-dial-ink shadow-sm disabled:opacity-40"
     >
       {connecting ? (
         <Loader2 className="size-5 animate-spin" />
@@ -317,7 +340,7 @@ function IconButton({
       aria-label={label}
       disabled={disabled}
       onClick={onClick}
-      className="grid size-11 place-items-center rounded-md text-fg disabled:opacity-40"
+      className="grid size-11 place-items-center rounded-md text-fg hover:bg-bg disabled:opacity-40"
     >
       {children}
     </button>

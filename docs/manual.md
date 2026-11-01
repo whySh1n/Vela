@@ -8,7 +8,7 @@ Open Vela. The dial loads the highest-voted working stations. Tap a row and it t
 
 ## Find a station
 
-- Type in **Search the dial**. Results update as you type.
+- Type in **Search stations**. Results update as you type.
 - **Place** narrows by country, for example `France` or `Japan`.
 - Genre chips (**Jazz**, **News**, **Ambient**, and the rest) replace the list with that tag. **Top** clears the genre.
 - **Dial** is the directory. **Saved** is what you starred. **Mine** is streams you added.

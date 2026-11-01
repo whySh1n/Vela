@@ -294,50 +294,68 @@ function Shell() {
     ? `${engine.current.name}. ${engine.status}.`
     : "Nothing on the air.";
 
+  const air =
+    engine.status === "playing"
+      ? "On air"
+      : engine.status === "connecting"
+        ? "Tuning"
+        : engine.status === "paused"
+          ? "Paused"
+          : engine.status === "error"
+            ? "Off air"
+            : engine.rested
+              ? "Rested"
+              : "Quiet";
+
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-bg text-fg">
-      <header className="flex items-center gap-2 border-b border-line px-3 py-2 sm:gap-3 sm:px-4">
-        <img src="/favicon.svg" alt="" className="size-8 shrink-0" />
+      <header className="flex h-16 shrink-0 items-center gap-3 border-b border-line px-3 sm:px-5">
+        <img src="/favicon.svg" alt="" className="size-7 shrink-0" />
         <div className="min-w-0">
-          <p className="text-lg font-medium leading-none tracking-tight">Vela</p>
-          <p className="hidden text-sm text-muted sm:block">late night dial</p>
+          <p className="text-[15px] font-medium leading-none tracking-tight">Vela</p>
+          <p className="mt-1 truncate font-mono text-[10px] uppercase tracking-[0.18em] text-muted">
+            <span className={engine.status === "playing" ? "text-dial" : undefined}>{air}</span>
+            {engine.current ? <span className="hidden normal-case tracking-normal sm:inline"> · {engine.current.name}</span> : null}
+          </p>
         </div>
-        <div className="ml-auto flex items-center gap-1 sm:gap-2">
+        <div className="ml-auto flex items-center gap-1">
           <a
             href="/vela-linux.zip"
             download="vela-linux.zip"
-            className="inline-flex h-11 items-center gap-2 rounded-md border border-line px-3 text-sm text-muted"
+            aria-label="Download for Arch and Debian"
+            className="inline-flex h-11 items-center gap-2 rounded-md px-2.5 text-sm text-muted hover:bg-surface hover:text-fg"
           >
             <Download className="size-4" />
-            <span className="hidden md:inline">Arch & Debian</span>
+            <span className="hidden lg:inline">Linux</span>
           </a>
           <button
             type="button"
             aria-label={muted || volume === 0 ? "Unmute" : "Mute"}
             aria-pressed={muted}
             onClick={toggleMute}
-            className="grid size-11 place-items-center rounded-md text-muted"
+            className="grid size-11 place-items-center rounded-md text-muted hover:bg-surface hover:text-fg"
           >
             {muted || volume === 0 ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
           </button>
           <button
             type="button"
             onClick={engine.cycleSleep}
-            className="inline-flex h-11 items-center gap-2 rounded-md px-2 font-mono text-sm text-muted tabular-nums"
+            className="inline-flex h-11 items-center gap-1.5 rounded-md px-2 font-mono text-xs text-muted tabular-nums hover:bg-surface hover:text-fg"
             aria-label="Sleep timer"
           >
             <Moon className="size-4" />
-            <span className={engine.sleepLeft == null ? "hidden sm:inline" : "tabular-nums"}>
+            <span className={engine.sleepLeft == null ? "hidden sm:inline" : undefined}>
               {engine.sleepLeft == null ? "Sleep" : formatClock(engine.sleepLeft)}
             </span>
           </button>
-          <div className="flex overflow-hidden rounded-md border border-line">
+          <div className="ml-1 flex rounded-md bg-surface p-1" role="group" aria-label="View">
             <button
               type="button"
               aria-pressed={mode === "desk"}
               onClick={() => setMode("desk")}
               className={
-                "h-11 px-3 text-sm " + (mode === "desk" ? "bg-dial text-dial-ink" : "text-muted")
+                "h-9 rounded-sm px-3 text-sm " +
+                (mode === "desk" ? "bg-dial text-dial-ink" : "text-muted hover:text-fg")
               }
             >
               Desk
@@ -347,7 +365,8 @@ function Shell() {
               aria-pressed={mode === "terminal"}
               onClick={() => setMode("terminal")}
               className={
-                "h-11 px-3 text-sm " + (mode === "terminal" ? "bg-dial text-dial-ink" : "text-muted")
+                "h-9 rounded-sm px-3 text-sm " +
+                (mode === "terminal" ? "bg-dial text-dial-ink" : "text-muted hover:text-fg")
               }
             >
               <span className="sm:hidden">Term</span>

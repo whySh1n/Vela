@@ -24,7 +24,7 @@ Search fields:
 
 | Field | Sent as |
 | --- | --- |
-| Search the dial | `name` |
+| Search stations | `name` |
 | Place | `country` |
 | Genre chip or `:tag` | `tag` |
 

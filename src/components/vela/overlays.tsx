@@ -13,7 +13,7 @@ function Frame({
 }) {
   return (
     <div
-      className="fixed inset-0 z-30 flex items-end justify-center bg-bg/80 p-4 sm:items-center"
+      className="fixed inset-0 z-30 flex items-end justify-center bg-black/55 p-4 backdrop-blur-[2px] sm:items-center"
       role="presentation"
       onMouseDown={onClose}
     >
@@ -21,7 +21,7 @@ function Frame({
         role="dialog"
         aria-modal="true"
         aria-labelledby="vela-dialog-title"
-        className="w-full max-w-md border border-line bg-surface p-5"
+        className="w-full max-w-md rounded-md border border-line bg-surface p-5 shadow-2xl shadow-black/50"
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between gap-3">
@@ -44,7 +44,7 @@ function Frame({
 }
 
 const field =
-  "h-11 w-full rounded-md border border-line bg-bg px-3 text-fg placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-dial";
+  "h-11 w-full rounded-md border border-line bg-bg px-3 text-sm text-fg placeholder:text-muted/80 focus-visible:border-dial";
 
 export function AddStation({
   onClose,

@@ -41,15 +41,15 @@ export function StationRows({
             aria-selected={active}
             data-station-id={station.id}
             className={
-              "flex items-stretch border-b border-line " +
-              (active ? "bg-surface-2" : "bg-transparent")
+              "group flex items-stretch border-b border-line " +
+              (active ? "bg-surface-2" : "hover:bg-surface")
             }
           >
             <span className={"w-0.5 shrink-0 " + (active ? "bg-dial" : "bg-transparent")} />
             <button
               type="button"
               onClick={() => onPlay(station, index)}
-              className="flex min-h-11 min-w-0 flex-1 items-center gap-3 px-3 py-2 text-left"
+              className="flex min-h-14 min-w-0 flex-1 items-center gap-3 px-3 py-2.5 text-left sm:px-4"
             >
               {layout === "term" ? (
                 <span className={"w-4 shrink-0 font-mono " + (active ? "text-dial" : "text-muted")}>
@@ -58,23 +58,24 @@ export function StationRows({
               ) : (
                 <span
                   className={
-                    "grid size-11 shrink-0 place-items-center rounded-sm bg-bg font-mono text-sm text-dial " +
-                    (onAir ? "ring-1 ring-dial" : "")
+                    "grid size-10 shrink-0 place-items-center rounded-sm border font-mono text-xs tracking-wide text-dial " +
+                    (onAir ? "border-dial bg-bg" : "border-transparent bg-bg")
                   }
                 >
                   {monogram(station.name)}
                 </span>
               )}
               <span className="min-w-0 flex-1">
-                <span className={"block truncate " + (layout === "term" ? "font-mono" : "")}>
-                  {station.name}
+                <span className={"flex items-center gap-2 truncate " + (layout === "term" ? "font-mono" : "text-[15px]")}>
+                  {onAir ? <span className="size-1.5 shrink-0 rounded-full bg-dial" aria-hidden="true" /> : null}
+                  <span className={"truncate " + (onAir ? "font-medium" : "")}>{station.name}</span>
                 </span>
-                <span className="block truncate text-sm text-muted">
-                  {placeLine(station) || (station.custom ? "Your stream" : "Live")}
+                <span className="mt-0.5 block truncate text-sm text-muted">
+                  {placeLine(station) || (station.custom ? "Custom stream" : "Live")}
                 </span>
               </span>
-              <span className="hidden shrink-0 font-mono text-sm text-muted sm:block">
-                {station.bitrate ? station.bitrate : station.countryCode}
+              <span className="hidden w-14 shrink-0 text-right font-mono text-xs tabular-nums text-muted sm:block">
+                {station.bitrate ? `${station.bitrate}k` : station.countryCode}
               </span>
             </button>
             {station.custom ? (
@@ -82,7 +83,7 @@ export function StationRows({
                 type="button"
                 aria-label={`Remove ${station.name}`}
                 onClick={() => removeCustom(station.id)}
-                className="grid size-11 shrink-0 place-items-center text-muted"
+                className="grid size-11 shrink-0 place-items-center text-muted hover:text-fg"
               >
                 <X className="size-4" />
               </button>
