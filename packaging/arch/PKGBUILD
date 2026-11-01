@@ -8,7 +8,7 @@ url="https://github.com/whySh1n/Vela"
 license=('MIT')
 depends=('python' 'mpv' 'pyside6')
 source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('SKIP')
+sha256sums=('f0cfc0192f1abe0c190b28c97fb32b5896c37fd5d6cf83d5df5fe80d17f9d018')
 
 check() {
   cd "Vela-$pkgver/linux"
