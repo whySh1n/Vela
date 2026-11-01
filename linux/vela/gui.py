@@ -213,6 +213,11 @@ def main(argv=None):
             self.started = None
             self.sleep_at = None
             self.outputs = [{"id": "auto", "label": "System default"}]
+            # Sliders fire on every step; write the library once they settle.
+            self.save_timer = QTimer(self)
+            self.save_timer.setSingleShot(True)
+            self.save_timer.setInterval(400)
+            self.save_timer.timeout.connect(self._save_now)
             self._build()
             self.fill()
             self.refresh_stage()
@@ -499,9 +504,18 @@ def main(argv=None):
                     widget.setParent(None)
                     shiboken6.delete(widget)
 
+        def _save_later(self):
+            self.save_timer.start()
+
+        def _save_now(self):
+            self.save_timer.stop()
+            library.save(self.lib)
+
         def shutdown(self):
             if self._closing:
                 return
+            if self.save_timer.isActive():
+                self._save_now()
             self.search_timer.stop()
             self.clock.stop()
             with self.lock:
@@ -760,7 +774,7 @@ def main(argv=None):
             self.vol_label.setText(str(value))
             self.mute_btn.setText("Mute")
             self.lib["volume"] = value
-            library.save(self.lib)
+            self._save_later()
 
         def cycle_sleep(self):
             current = 0
@@ -815,7 +829,7 @@ def main(argv=None):
                 "balance": self.player.balance,
                 "eq": self.player.eq,
             }
-            library.save(self.lib)
+            self._save_later()
             self._sync_route_label()
 
         def _load_devices(self):
@@ -885,7 +899,7 @@ def main(argv=None):
                     error.show()
                     return
                 station = {
-                    "id": f"custom:{int(time.time())}",
+                    "id": library.new_custom_id(),
                     "name": name.text().strip()[:120],
                     "streamUrl": stream[:500],
                     "homepage": "",

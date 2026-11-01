@@ -43,6 +43,7 @@ CHILD = textwrap.dedent(
         for i in range(6)
     ]
     radio.search = lambda *args, **kwargs: list(STATIONS)
+    import library
 
     from PySide6.QtCore import Qt, QTimer
     from PySide6.QtTest import QTest
@@ -146,6 +147,20 @@ CHILD = textwrap.dedent(
             window.on_played(window.play_token, "")
             results["synced"] = synced
 
+            # Sliders write the library once they settle, and closing flushes.
+            settle(app, 0.6)
+            saves = []
+            original_save = library.save
+            library.save = lambda lib: saves.append(lib.get("volume")) or original_save(lib)
+            for value in range(50, 70):
+                window.vol.setValue(value)
+            for value in range(-5, 6):
+                window.balance.setValue(value)
+            results["saves_while_dragging"] = len(saves)
+            settle(app, 0.7)
+            results["saves_after_settle"] = list(saves)
+            window.vol.setValue(12)
+
             print("RESULTS " + json.dumps(results), flush=True)
             window.close()
 
@@ -154,6 +169,7 @@ CHILD = textwrap.dedent(
 
     QApplication.exec = hooked
     code = gui.main(["vela"])
+    print("SAVED_VOLUME %s" % library.load()["volume"], flush=True)
     raise SystemExit(code or 0)
     """
 )
@@ -180,6 +196,7 @@ class WindowTest(unittest.TestCase):
         if result.returncode != 0 or line is None:
             raise AssertionError("stdout:\n%s\nstderr:\n%s" % (result.stdout, result.stderr))
         cls.results = json.loads(line[len("RESULTS ") :])
+        cls.stdout = result.stdout
 
     def test_space_at_launch_plays_instead_of_pressing_a_button(self):
         self.assertFalse(self.results["initial_focus_button"])
@@ -205,6 +222,13 @@ class WindowTest(unittest.TestCase):
         self.assertLess(self.results["blocked_seconds"], 0.3)
         self.assertEqual(self.results["volume_field"], 37)
         self.assertEqual(self.results["synced"], [37])
+
+    def test_sliders_write_the_library_once_they_settle(self):
+        self.assertEqual(self.results["saves_while_dragging"], 0)
+        self.assertEqual(self.results["saves_after_settle"], [69])
+
+    def test_closing_flushes_a_pending_save(self):
+        self.assertIn("SAVED_VOLUME 12", self.stdout)
 
 
 if __name__ == "__main__":

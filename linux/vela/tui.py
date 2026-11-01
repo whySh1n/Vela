@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import curses
+import queue
+import threading
 import time
 
 import library
@@ -72,6 +74,9 @@ class App:
         self.started = None
         self.sleep_at = None
         self.row_origin = 4
+        self.searching = False
+        self._search_token = 0
+        self._found = queue.SimpleQueue()
 
     def visible(self):
         if self.scope == "saved":
@@ -86,16 +91,39 @@ class App:
         return rows
 
     def search(self):
+        """Ask the directory in the background; collect() picks up the answer."""
+        self._search_token += 1
+        token = self._search_token
         self.note = "tuning the directory…"
         self.error = ""
-        try:
-            self.stations = radio.search(self.query, self.tag, self.country)
-            self.note = f"{len(self.stations)} stations"
-        except RuntimeError as exc:
-            self.stations = []
-            self.error = str(exc)
-            self.note = ""
-        self.selected = 0
+        self.searching = True
+        name, tag, country = self.query, self.tag, self.country
+
+        def work():
+            try:
+                rows, err = radio.search(name, tag, country), ""
+            except RuntimeError as exc:
+                rows, err = [], str(exc)
+            self._found.put((token, rows, err))
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def collect(self):
+        """Apply the newest search answer, if one has arrived. Older ones are dropped."""
+        changed = False
+        while True:
+            try:
+                token, rows, err = self._found.get_nowait()
+            except queue.Empty:
+                return changed
+            if token != self._search_token:
+                continue
+            self.searching = False
+            self.stations = rows
+            self.error = err
+            self.note = "" if err else f"{len(rows)} stations"
+            self.selected = 0
+            changed = True
 
     def play_index(self, index):
         rows = self.visible()
@@ -139,7 +167,7 @@ class App:
 
     def add_custom(self, name, url):
         station = {
-            "id": f"custom:{int(time.time())}",
+            "id": library.new_custom_id(),
             "name": name[:120] or "My stream",
             "streamUrl": url,
             "homepage": "",
@@ -186,6 +214,7 @@ class App:
         self.note = "sleep off" if nxt == 0 else f"sleep {nxt}m"
 
     def tick(self):
+        self.collect()
         if self.sleep_at and time.time() >= self.sleep_at:
             self.player.toggle() if self.player.alive() and not self.player.paused else self.player.stop()
             self.sleep_at = None

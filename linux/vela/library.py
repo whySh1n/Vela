@@ -5,11 +5,17 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+import uuid
 
 from player import _safe_device, safe_url
 
 MAX_STATIONS = 200
 EQS = ("flat", "voice", "night", "bass")
+
+
+def new_custom_id():
+    """A fresh id for a stream the user adds. Unique even within one second."""
+    return f"custom:{uuid.uuid4().hex[:16]}"
 
 
 def path():
