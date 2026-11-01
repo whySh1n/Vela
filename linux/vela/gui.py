@@ -37,6 +37,11 @@ QLineEdit {
   selection-background-color: #3a342c; selection-color: #efe8dc;
 }
 QLineEdit:focus { background: #24211d; }
+QWidget#finder { background: #1e1c19; border-radius: 10px; }
+QLineEdit#finderField, QLineEdit#finderField:focus {
+  background: transparent; border: none; border-radius: 0; padding: 10px 14px;
+}
+QFrame#finderRule { background: #2c2924; border: none; max-width: 1px; min-width: 1px; }
 QListWidget { border: none; outline: none; }
 QListWidget::item { border: none; }
 QListWidget::item:selected { background: #221f1b; }
@@ -250,17 +255,32 @@ def main(argv=None):
             left_box = QVBoxLayout(left)
             left_box.setContentsMargins(16, 12, 16, 8)
             left_box.setSpacing(8)
-            filters = QHBoxLayout()
+            finder = QWidget()
+            finder.setObjectName("finder")
+            filters = QHBoxLayout(finder)
+            filters.setContentsMargins(0, 0, 0, 0)
+            filters.setSpacing(0)
             self.search_box = QLineEdit()
+            self.search_box.setObjectName("finderField")
             self.search_box.setPlaceholderText("Search stations")
             self.search_box.textChanged.connect(self.on_query)
+            rule_host = QWidget()
+            rule_host.setFixedWidth(1)
+            rule_box = QVBoxLayout(rule_host)
+            rule_box.setContentsMargins(0, 12, 0, 12)
+            rule_box.setSpacing(0)
+            rule = QFrame()
+            rule.setObjectName("finderRule")
+            rule_box.addWidget(rule)
             self.country_box = QLineEdit()
+            self.country_box.setObjectName("finderField")
             self.country_box.setPlaceholderText("Country")
-            self.country_box.setFixedWidth(160)
+            self.country_box.setFixedWidth(168)
             self.country_box.textChanged.connect(self.on_country)
             filters.addWidget(self.search_box, 1)
+            filters.addWidget(rule_host)
             filters.addWidget(self.country_box)
-            left_box.addLayout(filters)
+            left_box.addWidget(finder)
 
             self.genre_group = QButtonGroup(self)
             self.genre_group.setExclusive(True)
