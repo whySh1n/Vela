@@ -3,7 +3,19 @@
 #   curl -fsSL https://raw.githubusercontent.com/whySh1n/Vela/main/linux/install.sh | sh
 set -eu
 
+if [ "$(id -u)" -eq 0 ]; then
+  echo "Run this as your user. Vela will ask for your password."
+  exit 1
+fi
+
 PREFIX="${PREFIX:-$HOME/.local}"
+case "$PREFIX" in
+  /*) ;;
+  *) echo "PREFIX must be a full path."; exit 1 ;;
+esac
+case "$PREFIX" in
+  *[!A-Za-z0-9/_.-]*) echo "PREFIX has characters Vela will not use."; exit 1 ;;
+esac
 FETCHED=""
 
 cleanup() {

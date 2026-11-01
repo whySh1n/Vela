@@ -6,6 +6,8 @@ import json
 import urllib.parse
 import urllib.request
 
+from player import safe_url
+
 SERVERS = (
     "https://de1.api.radio-browser.info",
     "https://de2.api.radio-browser.info",
@@ -24,11 +26,13 @@ def best_url(row):
     url = _text(row.get("url"), 500)
     resolved = _text(row.get("url_resolved"), 500)
     for candidate in (url, resolved):
-        if candidate.startswith("https://"):
-            return candidate
+        checked = safe_url(candidate, allow_private=False)
+        if checked.startswith("https://"):
+            return checked
     for candidate in (resolved, url):
-        if candidate.startswith("http://"):
-            return candidate
+        checked = safe_url(candidate, allow_private=False)
+        if checked.startswith("http://"):
+            return checked
     return ""
 
 
@@ -40,7 +44,9 @@ def slim(row):
     stream = best_url(row)
     if not station_id or not name or not stream:
         return None
-    homepage = _text(row.get("homepage"), 200)
+    homepage = safe_url(_text(row.get("homepage"), 200), allow_private=False)
+    if not homepage.startswith("https://"):
+        homepage = ""
     try:
         bitrate = max(0, int(row.get("bitrate") or 0))
     except (TypeError, ValueError):
@@ -49,7 +55,7 @@ def slim(row):
         "id": station_id,
         "name": name,
         "streamUrl": stream,
-        "homepage": homepage if homepage.startswith("https://") else "",
+        "homepage": homepage,
         "tags": _text(row.get("tags"), 180),
         "country": _text(row.get("country"), 60),
         "countryCode": _text(row.get("countrycode"), 8).upper(),
@@ -61,6 +67,13 @@ def slim(row):
 
 
 def search(name="", tag="", country="", limit=40):
+    name = str(name or "")[:80]
+    tag = str(tag or "")[:40]
+    country = str(country or "")[:60]
+    try:
+        limit = int(limit)
+    except (TypeError, ValueError):
+        limit = 40
     params = {
         "hidebroken": "true",
         "limit": str(max(1, min(int(limit), 50))),
@@ -82,7 +95,10 @@ def search(name="", tag="", country="", limit=40):
         )
         try:
             with urllib.request.urlopen(request, timeout=12) as response:
-                payload = json.loads(response.read().decode("utf-8"))
+                raw = response.read(2_000_001)
+            if len(raw) > 2_000_000:
+                continue
+            payload = json.loads(raw.decode("utf-8"))
         except (OSError, ValueError):
             continue
         if not isinstance(payload, list):

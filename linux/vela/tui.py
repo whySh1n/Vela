@@ -107,7 +107,7 @@ class App:
         self.current = station
         self.error = ""
         self.note = f"tuning {station['name']}…"
-        message = self.player.play(station["streamUrl"])
+        message = self.player.play(station["streamUrl"], allow_private=bool(station.get("custom")))
         if message:
             self.error = message
             self.note = ""
@@ -151,7 +151,7 @@ class App:
         self.scope = "mine"
         self.current = station
         self.note = f"added {station['name']}"
-        message = self.player.play(url)
+        message = self.player.play(url, allow_private=True)
         if message:
             self.error = message
         else:

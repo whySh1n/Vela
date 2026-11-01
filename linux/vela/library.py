@@ -6,6 +6,8 @@ import json
 import os
 import tempfile
 
+from player import _safe_device, safe_url
+
 MAX_STATIONS = 200
 EQS = ("flat", "voice", "night", "bass")
 
@@ -13,7 +15,8 @@ EQS = ("flat", "voice", "night", "bass")
 def path():
     root = os.environ.get("XDG_CONFIG_HOME") or os.path.join(os.path.expanduser("~"), ".config")
     folder = os.path.join(root, "vela")
-    os.makedirs(folder, exist_ok=True)
+    os.makedirs(folder, mode=0o700, exist_ok=True)
+    os.chmod(folder, 0o700)
     return os.path.join(folder, "library.json")
 
 
@@ -21,9 +24,9 @@ def _station(value):
     if not isinstance(value, dict):
         return None
     name = str(value.get("name") or "").strip()[:120]
-    stream = str(value.get("streamUrl") or "").strip()[:500]
+    stream = safe_url(str(value.get("streamUrl") or "").strip(), allow_private=bool(value.get("custom")))
     station_id = str(value.get("id") or "").strip()[:80]
-    if not name or not stream.startswith(("http://", "https://")) or not station_id:
+    if not name or not stream or not station_id:
         return None
     try:
         bitrate = max(0, int(value.get("bitrate") or 0))
@@ -33,7 +36,7 @@ def _station(value):
         "id": station_id,
         "name": name,
         "streamUrl": stream,
-        "homepage": str(value.get("homepage") or "")[:200],
+        "homepage": safe_url(str(value.get("homepage") or ""), allow_private=False)[:200],
         "tags": str(value.get("tags") or "")[:180],
         "country": str(value.get("country") or "")[:60],
         "countryCode": str(value.get("countryCode") or "")[:8],
@@ -46,7 +49,7 @@ def _station(value):
 
 def _route(value):
     raw = value if isinstance(value, dict) else {}
-    device = str(raw.get("device") or "auto").strip()[:180] or "auto"
+    device = _safe_device(str(raw.get("device") or "auto").strip())
     try:
         balance = float(raw.get("balance") or 0)
     except (TypeError, ValueError):
@@ -63,6 +66,8 @@ def empty():
 
 def load():
     try:
+        if os.path.getsize(path()) > 512_000:
+            return empty()
         with open(path(), encoding="utf-8") as handle:
             raw = json.load(handle)
     except (OSError, ValueError):
@@ -124,6 +129,7 @@ def save(library):
             json.dump(payload, handle, indent=2)
             handle.write("\n")
         os.replace(temporary, target)
+        os.chmod(target, 0o600)
     finally:
         if os.path.exists(temporary):
             try:

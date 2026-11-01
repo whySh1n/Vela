@@ -38,7 +38,9 @@ The stream address prefers `https://`. An `http://` address is kept when that is
 
 ## Playback
 
-One mpv process, started with `--no-video` and a JSON IPC socket in the temp directory. Pause, volume, mute, and the audio filters go through that socket. Changing the output device restarts mpv so the new sink is used from the first sample.
+One mpv process, started without mpv's own config or scripts. The address has to be plain `http://` or `https://`. Directory stations cannot point at your own machine or a private network. A stream you add yourself may use an address on your network, but still not a file, a password in the URL, or localhost. mpv is limited to those web protocols.
+
+The control socket lives in your runtime directory, not in a shared temp folder. Pause, volume, mute, and the audio filters go through that socket. Changing the output device restarts mpv so the new sink is used from the first sample.
 
 The window does not route audio through Qt. Qt draws the controls. mpv owns the sound.
 
@@ -56,7 +58,7 @@ Tone and balance need an mpv build with those ffmpeg filters. If a tone will not
 
 ## Library
 
-Saved stations and custom streams, up to 200 each. A custom stream must be `http://` or `https://`. The file is replaced atomically. The window and the terminal share it, including when both are used at different times. They do not sync while both are open.
+Saved stations and custom streams, up to 200 each. A custom stream must be `http://` or `https://`. The library file is private to your user and replaced atomically. The window and the terminal share it, including when both are used at different times. They do not sync while both are open. The installer refuses to run as root.
 
 ## Keys
 

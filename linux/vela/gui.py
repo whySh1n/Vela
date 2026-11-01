@@ -27,68 +27,57 @@ EQS = (("flat", "Flat"), ("voice", "Voice"), ("night", "Night"), ("bass", "Bass"
 SLEEP = (0, 15, 30, 45, 60, 90)
 
 QSS = """
-QMainWindow, QWidget#app { background: #141311; color: #efe8dc; }
-QWidget#stage { background: #191816; }
-QLabel, QListWidget { background: transparent; color: #efe8dc; }
-QFrame#line { background: #2c2924; max-height: 1px; min-height: 1px; border: none; }
+QMainWindow, QWidget#app { background: #0c0c0c; color: #f5f2ec; }
+QWidget#stage { background: #111111; }
+QLabel, QListWidget { background: transparent; color: #f5f2ec; }
+QFrame#line { background: #242424; max-height: 1px; min-height: 1px; border: none; }
 QLineEdit {
-  background: #1e1c19; color: #efe8dc; border: none; border-radius: 10px;
-  padding: 10px 14px; min-height: 20px;
-  selection-background-color: #3a342c; selection-color: #efe8dc;
+  background: transparent; color: #f5f2ec; border: none; padding: 0 16px;
+  selection-background-color: #2c2c2c; selection-color: #f5f2ec;
 }
-QLineEdit:focus { background: #24211d; }
-QWidget#finder { background: #1e1c19; border-radius: 10px; }
-QLineEdit#finderField, QLineEdit#finderField:focus {
-  background: transparent; border: none; border-radius: 0; padding: 10px 14px;
-}
-QFrame#finderRule { background: #2c2924; border: none; max-width: 1px; min-width: 1px; }
+QWidget#finder { background: #171717; border-radius: 22px; min-height: 44px; }
+QFrame#finderRule { background: #2a2a2a; border: none; max-width: 1px; min-width: 1px; }
 QListWidget { border: none; outline: none; }
-QListWidget::item { border: none; }
-QListWidget::item:selected { background: #221f1b; }
+QListWidget::item { border: none; background: transparent; }
+QListWidget::item:selected { background: transparent; }
 QPushButton {
-  background: transparent; color: #9a9082; border: none;
-  border-radius: 8px; padding: 8px 12px; min-height: 20px;
+  background: transparent; color: #8e8880; border: none;
+  border-radius: 16px; padding: 8px 12px;
 }
-QPushButton:hover { color: #efe8dc; background: #221f1b; }
-QPushButton:checked { color: #efe8dc; background: transparent; }
-QPushButton#ghost { padding: 8px 10px; }
-QPushButton#ghost:checked { color: #e6b15a; background: transparent; }
+QPushButton:hover { color: #f5f2ec; background: #1a1a1a; }
+QPushButton#ghost { padding: 8px 12px; }
+QPushButton#ghost:checked { color: #f5f2ec; background: transparent; }
 QPushButton#play {
-  background: #e6b15a; color: #2a2114; border: none; border-radius: 26px;
-  min-width: 52px; max-width: 52px; min-height: 52px; max-height: 52px;
-  font-size: 16px; padding: 0;
+  background: #f5f2ec; color: #111111; border: none; border-radius: 24px;
+  min-width: 48px; max-width: 48px; min-height: 48px; max-height: 48px;
+  font-size: 14px; padding: 0;
 }
-QPushButton#play:hover { background: #efc27a; color: #2a2114; }
-QPushButton#chip {
-  background: transparent; color: #9a9082; border: none; border-radius: 8px;
-  padding: 6px 10px;
-}
-QPushButton#chip:hover { color: #efe8dc; background: #221f1b; }
-QPushButton#chip:checked { color: #e6b15a; background: #221f1b; }
+QPushButton#play:hover { background: #ffffff; color: #111111; }
+QPushButton#chip { background: transparent; color: #8e8880; border: none; border-radius: 14px; padding: 6px 10px; }
+QPushButton#chip:hover { color: #f5f2ec; background: #1a1a1a; }
+QPushButton#chip:checked { color: #111111; background: #f5f2ec; }
 QComboBox {
-  background: #1e1c19; border: none; border-radius: 8px;
-  padding: 8px 12px; min-height: 20px; color: #efe8dc;
+  background: #171717; border: none; border-radius: 12px;
+  padding: 8px 12px; min-height: 20px; color: #f5f2ec;
 }
 QComboBox::drop-down { border: none; width: 22px; }
 QComboBox QAbstractItemView {
-  background: #1e1c19; color: #efe8dc; border: none;
-  selection-background-color: #2a261f; outline: none;
+  background: #171717; color: #f5f2ec; border: none;
+  selection-background-color: #242424; outline: none;
 }
-QSlider::groove:horizontal { height: 2px; background: #2c2924; border: none; }
-QSlider::sub-page:horizontal { background: #e6b15a; }
+QSlider::groove:horizontal { height: 2px; background: #2a2a2a; border: none; }
+QSlider::sub-page:horizontal { background: #f5f2ec; }
 QSlider::handle:horizontal {
-  background: #efe8dc; border: none; width: 12px; height: 12px; margin: -5px 0; border-radius: 6px;
+  background: #f5f2ec; border: none; width: 10px; height: 10px; margin: -4px 0; border-radius: 5px;
 }
-QLabel#eyebrow { color: #e6b15a; font-size: 11px; letter-spacing: 2px; }
-QLabel#title { font-size: 26px; font-weight: 500; }
-QLabel#muted, QLabel#meta { color: #9a9082; }
+QLabel#eyebrow { color: #8e8880; font-size: 11px; letter-spacing: 1px; }
+QLabel#title { font-size: 28px; font-weight: 500; }
+QLabel#muted, QLabel#meta { color: #8e8880; }
 QLabel#mark {
-  background: #141311; color: #e6b15a; border: none; border-radius: 18px; font-size: 26px;
+  background: #171717; color: #f5f2ec; border: none; border-radius: 36px; font-size: 22px;
 }
 QScrollBar:vertical { background: transparent; width: 8px; margin: 0; }
-QScrollBar::handle:vertical { background: #2c2924; border-radius: 4px; min-height: 24px; }
-QScrollBar:horizontal { background: transparent; height: 8px; margin: 0; }
-QScrollBar::handle:horizontal { background: #2c2924; border-radius: 4px; min-width: 24px; }
+QScrollBar::handle:vertical { background: #2a2a2a; border-radius: 4px; min-height: 24px; }
 QScrollBar::add-line, QScrollBar::sub-line, QScrollBar::add-page, QScrollBar::sub-page, QScrollBar::corner {
   background: transparent; border: none; width: 0; height: 0;
 }
@@ -219,22 +208,15 @@ def main(argv=None):
 
             header = QWidget()
             bar = QHBoxLayout(header)
-            bar.setContentsMargins(16, 10, 12, 10)
-            mark = QLabel("V")
-            mark.setFixedSize(28, 28)
-            mark.setAlignment(Qt.AlignCenter)
-            mark.setStyleSheet("background:#e8a04a;color:#2a1c0a;border-radius:4px;font-weight:600;")
-            titles = QVBoxLayout()
-            titles.setSpacing(0)
+            bar.setContentsMargins(22, 14, 16, 14)
+            titles = QHBoxLayout()
+            titles.setSpacing(10)
             name = QLabel("Vela")
-            name.setStyleSheet("font-size:15px;font-weight:600;")
-            self.header_status = QLabel("QUIET")
+            name.setStyleSheet("font-size:16px;font-weight:500;")
+            self.header_status = QLabel("Quiet")
             self.header_status.setObjectName("muted")
-            self.header_status.setStyleSheet("color:#a39882;font-size:10px;letter-spacing:1px;")
             titles.addWidget(name)
             titles.addWidget(self.header_status)
-            bar.addWidget(mark)
-            bar.addSpacing(8)
             bar.addLayout(titles)
             bar.addStretch(1)
             self.sleep_btn = QPushButton("Sleep")
@@ -253,10 +235,11 @@ def main(argv=None):
 
             left = QWidget()
             left_box = QVBoxLayout(left)
-            left_box.setContentsMargins(16, 12, 16, 8)
-            left_box.setSpacing(8)
+            left_box.setContentsMargins(20, 16, 12, 12)
+            left_box.setSpacing(10)
             finder = QWidget()
             finder.setObjectName("finder")
+            finder.setFixedHeight(44)
             filters = QHBoxLayout(finder)
             filters.setContentsMargins(0, 0, 0, 0)
             filters.setSpacing(0)
@@ -324,9 +307,10 @@ def main(argv=None):
 
             self.count = QLabel("DIRECTORY")
             self.count.setObjectName("muted")
-            self.count.setStyleSheet("color:#a39882;font-size:10px;letter-spacing:1px;")
+            self.count.setStyleSheet("color:#6f6a64;font-size:10px;letter-spacing:1.5px;")
             left_box.addWidget(self.count)
             self.list = QListWidget()
+            self.list.setSpacing(2)
             self.list.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
             self.list.itemActivated.connect(self.on_activate)
             self.list.currentRowChanged.connect(self.on_row)
@@ -335,16 +319,16 @@ def main(argv=None):
 
             stage = QWidget()
             stage.setObjectName("stage")
-            stage.setFixedWidth(340)
+            stage.setFixedWidth(360)
             side = QVBoxLayout(stage)
-            side.setContentsMargins(22, 22, 22, 16)
-            side.setSpacing(8)
-            self.eyebrow = QLabel("QUIET")
+            side.setContentsMargins(28, 32, 28, 24)
+            side.setSpacing(12)
+            self.eyebrow = QLabel("Quiet")
             self.eyebrow.setObjectName("eyebrow")
             self.mark = QLabel("·")
             self.mark.setObjectName("mark")
             self.mark.setAlignment(Qt.AlignCenter)
-            self.mark.setFixedSize(88, 88)
+            self.mark.setFixedSize(72, 72)
             self.title = QLabel("No station")
             self.title.setObjectName("title")
             self.title.setWordWrap(True)
@@ -461,7 +445,7 @@ def main(argv=None):
             for index, station in enumerate(rows):
                 item = QListWidgetItem()
                 item.setData(Qt.UserRole, station["id"])
-                item.setSizeHint(QSize(0, 58))
+                item.setSizeHint(QSize(0, 64))
                 self.list.addItem(item)
                 self.list.setItemWidget(item, self._row(station, index, station["id"] in saved))
             if rows:
@@ -478,26 +462,29 @@ def main(argv=None):
 
         def _row(self, station, index, saved):
             wrap = QWidget()
-            wrap.setStyleSheet("background:transparent;")
+            wrap.setStyleSheet("background:#161616;border-radius:12px;" if index == self.selected else "background:transparent;")
             box = QHBoxLayout(wrap)
-            box.setContentsMargins(8, 4, 4, 4)
+            box.setContentsMargins(12, 6, 6, 6)
             text = QVBoxLayout()
-            text.setSpacing(0)
+            text.setSpacing(2)
             title = QLabel(station["name"])
-            title.setStyleSheet("font-size:14px;background:transparent;")
+            title.setStyleSheet("font-size:15px;font-weight:500;background:transparent;")
             sub = QLabel(place_line(station))
-            sub.setStyleSheet("color:#a39882;font-size:12px;background:transparent;")
+            sub.setStyleSheet("color:#8e8880;font-size:12px;background:transparent;")
             text.addWidget(title)
             text.addWidget(sub)
             box.addLayout(text, 1)
             rate = station.get("bitrate")
             if rate:
-                meta = QLabel(f"{rate}k")
-                meta.setStyleSheet("color:#a39882;font-size:12px;background:transparent;")
+                meta = QLabel(f"{rate}")
+                meta.setStyleSheet("color:#6f6a64;font-size:11px;background:transparent;")
                 box.addWidget(meta)
             star = QPushButton("★" if saved else "☆")
-            star.setFixedWidth(36)
-            star.setStyleSheet("color:#e8a04a;font-size:16px;background:transparent;" if saved else "background:transparent;")
+            star.setFlat(True)
+            star.setFixedWidth(32)
+            star.setStyleSheet(
+                "color:#f5f2ec;font-size:13px;background:transparent;" if saved else "color:#6f6a64;background:transparent;"
+            )
             star.clicked.connect(lambda _=False, i=index: self.toggle_saved(i))
             box.addWidget(star)
             return wrap
@@ -585,7 +572,7 @@ def main(argv=None):
                 with self.lock:
                     if token != self.play_token:
                         return
-                    message = self.player.play(url)
+                    message = self.player.play(url, allow_private=bool(station.get("custom")))
                 self.bridge.played.emit(token, message or "")
 
             threading.Thread(target=work, daemon=True).start()
@@ -804,11 +791,11 @@ def main(argv=None):
         def refresh_stage(self):
             station = self.current
             labels = {
-                "idle": "QUIET",
-                "connecting": "TUNING",
-                "playing": "ON AIR",
-                "paused": "PAUSED",
-                "error": "OFF AIR",
+                "idle": "Quiet",
+                "connecting": "Tuning",
+                "playing": "On air",
+                "paused": "Paused",
+                "error": "Off air",
             }
             self.eyebrow.setText(labels.get(self.status, "QUIET"))
             self.header_status.setText(labels.get(self.status, "QUIET"))
@@ -907,16 +894,16 @@ def main(argv=None):
     app.setStyle("Fusion")
     app.setFont(QFont("Sans Serif", 11))
     ink = QPalette()
-    ink.setColor(QPalette.Window, QColor("#141311"))
-    ink.setColor(QPalette.WindowText, QColor("#efe8dc"))
-    ink.setColor(QPalette.Base, QColor("#1e1c19"))
-    ink.setColor(QPalette.AlternateBase, QColor("#191816"))
-    ink.setColor(QPalette.Text, QColor("#efe8dc"))
-    ink.setColor(QPalette.Button, QColor("#1e1c19"))
-    ink.setColor(QPalette.ButtonText, QColor("#efe8dc"))
-    ink.setColor(QPalette.Highlight, QColor("#2a261f"))
-    ink.setColor(QPalette.HighlightedText, QColor("#efe8dc"))
-    ink.setColor(QPalette.PlaceholderText, QColor("#7c7468"))
+    ink.setColor(QPalette.Window, QColor("#0c0c0c"))
+    ink.setColor(QPalette.WindowText, QColor("#f5f2ec"))
+    ink.setColor(QPalette.Base, QColor("#171717"))
+    ink.setColor(QPalette.AlternateBase, QColor("#111111"))
+    ink.setColor(QPalette.Text, QColor("#f5f2ec"))
+    ink.setColor(QPalette.Button, QColor("#171717"))
+    ink.setColor(QPalette.ButtonText, QColor("#f5f2ec"))
+    ink.setColor(QPalette.Highlight, QColor("#242424"))
+    ink.setColor(QPalette.HighlightedText, QColor("#f5f2ec"))
+    ink.setColor(QPalette.PlaceholderText, QColor("#6f6a64"))
     app.setPalette(ink)
     app.setStyleSheet(QSS)
     window = Window()
