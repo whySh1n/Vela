@@ -80,7 +80,14 @@ fi
 
 if ! has_window; then
   echo "Installing the window library for this user…"
-  python3 -m pip install --user PySide6-Essentials
+  if ! python3 -m pip install --user PySide6-Essentials; then
+    echo
+    echo "Vela could not add PySide6 with pip. Many systems only allow it from the package manager."
+    echo "Install it, then run this command again:"
+    echo "  Arch:    sudo pacman -S pyside6"
+    echo "  Debian:  sudo apt install python3-pyside6.qtwidgets python3-pyside6.qtgui python3-pyside6.qtcore"
+    exit 1
+  fi
 fi
 
 if ! command -v mpv >/dev/null 2>&1 || ! has_window; then
@@ -112,14 +119,20 @@ fi
 remember_path() {
   bin="$PREFIX/bin"
   line="export PATH=\"$bin:\$PATH\""
-  for rc in "$HOME/.bashrc" "$HOME/.profile"; do
-    if [ -f "$rc" ] && grep -F -q "$bin" "$rc"; then
+  found=""
+  # Only touch shell files that already exist. Creating a .bashrc or
+  # .profile can change how someone's shell starts.
+  for rc in "$HOME/.bashrc" "$HOME/.profile" "$HOME/.zshrc"; do
+    if [ ! -f "$rc" ]; then
       continue
     fi
-    printf '\n# Vela\n%s\n' "$line" >> "$rc"
+    found=1
+    if ! grep -F -q "$bin" "$rc"; then
+      printf '\n# Vela\n%s\n' "$line" >> "$rc"
+    fi
   done
-  if [ -f "$HOME/.zshrc" ] && ! grep -F -q "$bin" "$HOME/.zshrc"; then
-    printf '\n# Vela\n%s\n' "$line" >> "$HOME/.zshrc"
+  if [ -z "$found" ]; then
+    printf '# Vela\n%s\n' "$line" > "$HOME/.profile"
   fi
   export PATH="$bin:$PATH"
 }
