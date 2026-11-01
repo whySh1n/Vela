@@ -154,6 +154,8 @@ def main(argv=None):
         print("You can still listen with:  vela --term")
         return 1
 
+    import shiboken6
+
     class Bridge(QObject):
         results = Signal(int, object, str)
         played = Signal(int, str)
@@ -168,7 +170,8 @@ def main(argv=None):
             self.lib = library.load()
             self.player = player.Player(self.lib.get("volume", 82), self.lib.get("route"))
             self.lock = threading.Lock()
-            self.bridge = Bridge()
+            self._closing = False
+            self.bridge = Bridge(self)
             self.bridge.results.connect(self.on_results)
             self.bridge.played.connect(self.on_played)
             self.bridge.devices.connect(self.on_devices)
@@ -437,10 +440,36 @@ def main(argv=None):
         def saved_ids(self):
             return {item["id"] for item in self.lib["favorites"]}
 
+        def _discard_rows(self):
+            # QListWidget.clear() drops the items and leaves their widgets
+            # parented to the viewport. Those leftovers stay Python-owned, and
+            # PySide destroys them again while the application is shutting down.
+            viewport = self.list.viewport()
+            self.list.clear()
+            for child in list(viewport.children()):
+                if isinstance(child, QWidget) and shiboken6.isValid(child):
+                    child.setParent(None)
+                    shiboken6.delete(child)
+
+        def shutdown(self):
+            if self._closing:
+                return
+            self.search_timer.stop()
+            self.clock.stop()
+            with self.lock:
+                self._closing = True
+                self.token += 1
+                self.play_token += 1
+                self.bridge.blockSignals(True)
+                self.player.stop()
+            self._discard_rows()
+
         def fill(self):
+            if self._closing:
+                return
             rows = self.visible()
             self.list.blockSignals(True)
-            self.list.clear()
+            self._discard_rows()
             saved = self.saved_ids()
             for index, station in enumerate(rows):
                 item = QListWidgetItem()
@@ -522,6 +551,8 @@ def main(argv=None):
             self.play_index(self.list.currentRow())
 
         def search(self):
+            if self._closing:
+                return
             self.token += 1
             token = self.token
             if self.scope != "dial":
@@ -536,12 +567,15 @@ def main(argv=None):
                     err = ""
                 except RuntimeError as exc:
                     rows, err = [], str(exc)
-                self.bridge.results.emit(token, rows, err)
+                with self.lock:
+                    if self._closing or token != self.token:
+                        return
+                    self.bridge.results.emit(token, rows, err)
 
             threading.Thread(target=work, daemon=True).start()
 
         def on_results(self, token, rows, err):
-            if token != self.token or self.scope != "dial":
+            if self._closing or token != self.token or self.scope != "dial":
                 return
             self.stations = list(rows)
             self.error = err
@@ -570,15 +604,17 @@ def main(argv=None):
 
             def work():
                 with self.lock:
-                    if token != self.play_token:
+                    if self._closing or token != self.play_token:
                         return
                     message = self.player.play(url, allow_private=bool(station.get("custom")))
-                self.bridge.played.emit(token, message or "")
+                    if self._closing or token != self.play_token:
+                        return
+                    self.bridge.played.emit(token, message or "")
 
             threading.Thread(target=work, daemon=True).start()
 
         def on_played(self, token, message):
-            if token != self.play_token:
+            if self._closing or token != self.play_token:
                 return
             if message:
                 self.status = "error"
@@ -706,14 +742,21 @@ def main(argv=None):
 
         def _load_devices(self):
             with self.lock:
+                if self._closing:
+                    return
                 found = self.player.devices()
             if not found:
                 found = [{"id": "auto", "label": "System default"}]
             elif not any(item["id"] == "auto" for item in found):
                 found = [{"id": "auto", "label": "System default"}, *found]
-            self.bridge.devices.emit(found)
+            with self.lock:
+                if self._closing:
+                    return
+                self.bridge.devices.emit(found)
 
         def on_devices(self, found):
+            if self._closing:
+                return
             self.outputs = list(found)
             self.device_box.blockSignals(True)
             self.device_box.clear()
@@ -818,6 +861,8 @@ def main(argv=None):
                 self.elapsed.setText("")
 
         def tick(self):
+            if self._closing:
+                return
             if self.sleep_at and time.time() >= self.sleep_at:
                 with self.lock:
                     if self.player.alive() and not self.player.paused:
@@ -885,9 +930,18 @@ def main(argv=None):
             super().keyPressEvent(event)
 
         def closeEvent(self, event):
-            with self.lock:
-                self.player.stop()
+            self.shutdown()
             event.accept()
+
+    def retire(window, app):
+        # Destroy the window while QApplication is still alive. Otherwise
+        # PySide walks every leftover wrapper from interpreter shutdown and
+        # faults in QObject's destructor.
+        if window is not None and shiboken6.isValid(window):
+            window.shutdown()
+            window.hide()
+            app.processEvents()
+            shiboken6.delete(window)
 
     app = QApplication(argv)
     app.setApplicationName("Vela")
@@ -921,8 +975,11 @@ def main(argv=None):
             path = argv[-1]
         window.grab().save(path)
         print(path)
+        retire(window, app)
         return 0
-    return app.exec()
+    code = app.exec()
+    retire(window, app)
+    return code
 
 
 if __name__ == "__main__":
