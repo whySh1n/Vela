@@ -106,6 +106,10 @@ def _runtime_socket():
 
 
 class Player:
+    # How long an https upgrade of an http station gets to start decoding
+    # before Vela gives up on it and plays the original http address.
+    UPGRADE_WAIT = 4.0
+
     def __init__(self, volume=82, route=None):
         self.volume = max(0, min(100, int(volume)))
         self.muted = False
@@ -157,8 +161,16 @@ class Player:
             if upgraded:
                 urls = [upgraded, checked]
         last = "This station did not answer."
-        for candidate in urls:
+        for position, candidate in enumerate(urls):
             self._start(candidate)
+            if position < len(urls) - 1:
+                # An upgrade attempt that is merely still connecting is not a
+                # success: it must be decoding audio, or the http form gets a turn.
+                if self._ready(self.UPGRADE_WAIT):
+                    self.url = candidate
+                    self.paused = False
+                    return None
+                continue
             time.sleep(0.8)
             if self.proc and self.proc.poll() is None:
                 self.url = candidate
@@ -220,21 +232,42 @@ class Player:
     def alive(self):
         return self.proc is not None and self.proc.poll() is None
 
+    def _ready(self, timeout):
+        """True once mpv reports an audio codec, False if it exits or times out."""
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if not self.alive():
+                return False
+            reply = self._reply(["get_property", "audio-codec-name"])
+            if reply and reply.get("error") == "success" and reply.get("data"):
+                return True
+            time.sleep(0.1)
+        return False
+
     def toggle(self):
         if not self.alive():
             return
         self.paused = not self.paused
         self.ipc(["set_property", "pause", self.paused])
 
-    def set_volume(self, volume):
+    def set_volume(self, volume, send=True):
         self.volume = max(0, min(100, int(volume)))
         if self.volume > 0:
             self.muted = False
-        self.ipc(["set_property", "volume", 0 if self.muted else self.volume])
+        if send:
+            self.ipc(["set_property", "volume", 0 if self.muted else self.volume])
 
-    def toggle_mute(self):
+    def toggle_mute(self, send=True):
         self.muted = not self.muted
+        if send:
+            self.ipc(["set_property", "volume", 0 if self.muted else self.volume])
+
+    def sync(self):
+        """Push volume and filters to a running mpv, e.g. after changes made while tuning."""
+        if not self.alive():
+            return
         self.ipc(["set_property", "volume", 0 if self.muted else self.volume])
+        self._apply_filters()
 
     def set_device(self, device):
         self.device = _safe_device(device)
@@ -245,17 +278,19 @@ class Player:
                 self.toggle()
         return self.device
 
-    def set_balance(self, balance):
+    def set_balance(self, balance, send=True):
         try:
             self.balance = max(-1.0, min(1.0, round(float(balance), 2)))
         except (TypeError, ValueError):
             self.balance = 0.0
-        self._apply_filters()
+        if send:
+            self._apply_filters()
         return self.balance
 
-    def set_eq(self, eq):
+    def set_eq(self, eq, send=True):
         self.eq = eq if eq in EQS else "flat"
-        self._apply_filters()
+        if send:
+            self._apply_filters()
         return self.eq
 
     def _apply_filters(self):
@@ -279,23 +314,43 @@ class Player:
         return " · ".join(bits)
 
     def ipc(self, command):
+        """Send one command; return the raw reply line, or None."""
         if not os.path.exists(self.sock):
             return None
         self._request += 1
-        payload = {"command": command, "request_id": self._request}
+        request_id = self._request
+        payload = {"command": command, "request_id": request_id}
         client = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         client.settimeout(0.4)
         try:
             client.connect(self.sock)
             client.sendall((json.dumps(payload) + "\n").encode("utf-8"))
             data = b""
-            while b"\n" not in data:
+            while True:
+                # mpv also broadcasts events on the socket; skip to our reply.
+                while b"\n" in data:
+                    line, data = data.split(b"\n", 1)
+                    try:
+                        message = json.loads(line)
+                    except ValueError:
+                        continue
+                    if isinstance(message, dict) and message.get("request_id") == request_id:
+                        return line + b"\n"
                 chunk = client.recv(4096)
                 if not chunk:
-                    break
+                    return None
                 data += chunk
         except OSError:
             return None
         finally:
             client.close()
-        return data
+
+    def _reply(self, command):
+        line = self.ipc(command)
+        if not line:
+            return None
+        try:
+            message = json.loads(line)
+        except ValueError:
+            return None
+        return message if isinstance(message, dict) else None
