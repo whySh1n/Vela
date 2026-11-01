@@ -1,4 +1,4 @@
-"""Keyboard-first Vela. Run with `vela`."""
+"""Keyboard-first Vela. Run with `vela --term`."""
 
 from __future__ import annotations
 
@@ -117,8 +117,13 @@ class App:
             self.note = "on air"
             self.remember_volume()
 
-    def toggle_saved(self):
+    def clamp(self):
         rows = self.visible()
+        self.selected = max(0, min(self.selected, len(rows) - 1)) if rows else 0
+        return rows
+
+    def toggle_saved(self):
+        rows = self.clamp()
         if not rows:
             return
         station = rows[self.selected]
@@ -130,6 +135,7 @@ class App:
             self.lib["favorites"] = [station, *[item for item in favorites if item["id"] != station["id"]]][:200]
             self.note = "saved"
         library.save(self.lib)
+        self.clamp()
 
     def add_custom(self, name, url):
         station = {
