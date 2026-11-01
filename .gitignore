@@ -1,0 +1,12 @@
+node_modules/
+.vercel/
+.tanstack/
+.grok/
+screenshots/
+artifacts/
+**/__pycache__/
+*.pyc
+*.log
+.env
+.env.*
+.node_modules.lock

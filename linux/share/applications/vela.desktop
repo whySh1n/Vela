@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Vela
+Comment=Late night radio
+Exec=__PREFIX__/bin/vela --desk
+Icon=vela
+Terminal=false
+Type=Application
+Categories=Audio;AudioVideo;Player;
+StartupNotify=true
