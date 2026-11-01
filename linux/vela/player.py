@@ -14,6 +14,7 @@ from urllib.parse import urlsplit
 
 EQS = ("flat", "voice", "night", "bass")
 _DEVICE = re.compile(r"^[A-Za-z0-9_.:/=+-]+$")
+_HOSTNAME = re.compile(r"^[a-z0-9_.-]+$")
 _HELP = re.compile(r"^\s*'([^']+)'\s+\((.*)\)\s*$")
 
 
@@ -32,13 +33,30 @@ def safe_url(url, allow_private=False):
         return ""
     if parts.scheme not in ("http", "https") or parts.username or parts.password:
         return ""
-    host = parts.hostname
-    if not host or host.isdigit() or host.lower() in ("localhost", "metadata.google.internal"):
+    host = (parts.hostname or "").lower()
+    if not host:
         return ""
     try:
         address = ipaddress.ip_address(host)
     except ValueError:
         address = None
+        try:
+            ascii_host = host.encode("idna").decode("ascii")
+        except UnicodeError:
+            return ""
+        if not _HOSTNAME.match(ascii_host):
+            return ""
+        name = ascii_host.rstrip(".")
+        if name in ("localhost", "metadata.google.internal") or name.endswith(".localhost"):
+            return ""
+        # The resolver also reads shorthand IPv4 such as 127.1, 0x7f000001
+        # or 2130706433. Judge those as the address they really are.
+        try:
+            address = ipaddress.IPv4Address(socket.inet_aton(name))
+        except OSError:
+            address = None
+    if address is not None and address.version == 6 and address.ipv4_mapped:
+        address = address.ipv4_mapped
     if address is not None:
         if (
             address.is_loopback

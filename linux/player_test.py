@@ -118,5 +118,50 @@ class PlayFallbackTest(unittest.TestCase):
         self.assertEqual(reply["request_id"], self.player._request)
 
 
+class SafeUrlTest(unittest.TestCase):
+    def test_local_addresses_in_any_spelling_are_refused(self):
+        for url in (
+            "http://localhost/",
+            "http://localhost./",
+            "http://radio.localhost/",
+            "http://127.0.0.1/",
+            "http://127.1/",
+            "http://0x7f000001/",
+            "http://0177.0.0.1/",
+            "http://2130706433/",
+            "http://[::1]/",
+            "http://[::ffff:127.0.0.1]/",
+            "http://169.254.169.254/latest/",
+            "http://0.0.0.0/",
+            "http://metadata.google.internal/",
+        ):
+            with self.subTest(url=url):
+                self.assertEqual(player.safe_url(url), "")
+                self.assertEqual(player.safe_url(url, allow_private=True), "")
+
+    def test_private_networks_only_for_your_own_streams(self):
+        for url in ("http://10.0.0.5:8000/live", "http://192.168.1.20/live", "http://10.1/live"):
+            with self.subTest(url=url):
+                self.assertEqual(player.safe_url(url), "")
+                self.assertEqual(player.safe_url(url, allow_private=True), url)
+
+    def test_odd_hostnames_and_other_schemes_are_refused(self):
+        for url in ("http://ex ample.com/", "http://user:pw@example.com/", "file:///etc/passwd", "rtmp://example.com/"):
+            with self.subTest(url=url):
+                self.assertEqual(player.safe_url(url), "")
+
+    def test_ordinary_streams_pass(self):
+        for url in (
+            "https://icecast.walmradio.com:8443/classic",
+            "http://jking.cdnstream1.com/b22139_128mp3",
+            "https://stream_1.example.com/live",
+            "http://1.1.1.1/live",
+            "http://[2606:4700::1111]/live",
+            "http://радио.рф/stream",
+        ):
+            with self.subTest(url=url):
+                self.assertEqual(player.safe_url(url), url)
+
+
 if __name__ == "__main__":
     unittest.main()
