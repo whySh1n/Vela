@@ -27,55 +27,66 @@ EQS = (("flat", "Flat"), ("voice", "Voice"), ("night", "Night"), ("bass", "Bass"
 SLEEP = (0, 15, 30, 45, 60, 90)
 
 QSS = """
-QMainWindow, QWidget#app { background: #12110e; color: #f3ead7; }
-QWidget#stage { background: #1c1a16; }
-QLabel, QListWidget, QScrollArea { background: transparent; color: #f3ead7; }
-QFrame#line { background: #343027; max-height: 1px; min-height: 1px; border: none; }
+QMainWindow, QWidget#app { background: #141311; color: #efe8dc; }
+QWidget#stage { background: #191816; }
+QLabel, QListWidget { background: transparent; color: #efe8dc; }
+QFrame#line { background: #2c2924; max-height: 1px; min-height: 1px; border: none; }
 QLineEdit {
-  background: #12110e; color: #f3ead7; border: 1px solid #343027;
-  border-radius: 6px; padding: 8px 10px; min-height: 22px;
-  selection-background-color: #e8a04a; selection-color: #2a1c0a;
+  background: #1e1c19; color: #efe8dc; border: none; border-radius: 10px;
+  padding: 10px 14px; min-height: 20px;
+  selection-background-color: #3a342c; selection-color: #efe8dc;
 }
-QLineEdit:focus { border-color: #e8a04a; }
+QLineEdit:focus { background: #24211d; }
 QListWidget { border: none; outline: none; }
-QListWidget::item { border-bottom: 1px solid #343027; }
-QListWidget::item:selected { background: #26231d; }
+QListWidget::item { border: none; }
+QListWidget::item:selected { background: #221f1b; }
 QPushButton {
-  background: transparent; color: #a39882; border: 1px solid transparent;
-  border-radius: 6px; padding: 8px 12px; min-height: 22px;
+  background: transparent; color: #9a9082; border: none;
+  border-radius: 8px; padding: 8px 12px; min-height: 20px;
 }
-QPushButton:hover { color: #f3ead7; background: #26231d; }
-QPushButton:checked { color: #2a1c0a; background: #e8a04a; border-color: #e8a04a; }
-QPushButton#ghost:checked { color: #f3ead7; background: transparent; border: none; border-bottom: 2px solid #e8a04a; border-radius: 0; }
+QPushButton:hover { color: #efe8dc; background: #221f1b; }
+QPushButton:checked { color: #efe8dc; background: transparent; }
+QPushButton#ghost { padding: 8px 10px; }
+QPushButton#ghost:checked { color: #e6b15a; background: transparent; }
 QPushButton#play {
-  background: #e8a04a; color: #2a1c0a; border: none; border-radius: 26px;
+  background: #e6b15a; color: #2a2114; border: none; border-radius: 26px;
   min-width: 52px; max-width: 52px; min-height: 52px; max-height: 52px;
   font-size: 16px; padding: 0;
 }
-QPushButton#play:hover { background: #f0b15f; color: #2a1c0a; }
-QPushButton#chip { border: 1px solid #343027; border-radius: 14px; padding: 6px 12px; }
-QPushButton#chip:checked { border-color: #e8a04a; }
+QPushButton#play:hover { background: #efc27a; color: #2a2114; }
+QPushButton#chip {
+  background: transparent; color: #9a9082; border: none; border-radius: 8px;
+  padding: 6px 10px;
+}
+QPushButton#chip:hover { color: #efe8dc; background: #221f1b; }
+QPushButton#chip:checked { color: #e6b15a; background: #221f1b; }
 QComboBox {
-  background: #12110e; border: 1px solid #343027; border-radius: 6px;
-  padding: 6px 10px; min-height: 22px; color: #f3ead7;
+  background: #1e1c19; border: none; border-radius: 8px;
+  padding: 8px 12px; min-height: 20px; color: #efe8dc;
 }
-QComboBox QAbstractItemView { background: #1c1a16; color: #f3ead7; selection-background-color: #26231d; }
-QSlider::groove:horizontal { height: 3px; background: #343027; border-radius: 1px; }
-QSlider::sub-page:horizontal { background: #e8a04a; border-radius: 1px; }
+QComboBox::drop-down { border: none; width: 22px; }
+QComboBox QAbstractItemView {
+  background: #1e1c19; color: #efe8dc; border: none;
+  selection-background-color: #2a261f; outline: none;
+}
+QSlider::groove:horizontal { height: 2px; background: #2c2924; border: none; }
+QSlider::sub-page:horizontal { background: #e6b15a; }
 QSlider::handle:horizontal {
-  background: #e8a04a; border: none; width: 14px; height: 14px; margin: -6px 0; border-radius: 7px;
+  background: #efe8dc; border: none; width: 12px; height: 12px; margin: -5px 0; border-radius: 6px;
 }
-QLabel#eyebrow { color: #e8a04a; font-size: 11px; letter-spacing: 2px; }
-QLabel#title { font-size: 26px; }
-QLabel#muted, QLabel#meta { color: #a39882; }
+QLabel#eyebrow { color: #e6b15a; font-size: 11px; letter-spacing: 2px; }
+QLabel#title { font-size: 26px; font-weight: 500; }
+QLabel#muted, QLabel#meta { color: #9a9082; }
 QLabel#mark {
-  background: #12110e; color: #e8a04a; border: 1px solid #343027; border-radius: 8px; font-size: 26px;
+  background: #141311; color: #e6b15a; border: none; border-radius: 18px; font-size: 26px;
 }
-QLabel#mark[live="true"] { border-color: #e8a04a; }
-QScrollBar:vertical { background: transparent; width: 10px; }
-QScrollBar::handle:vertical { background: #343027; border-radius: 4px; min-height: 24px; }
-QScrollBar:horizontal { background: transparent; height: 8px; }
-QScrollBar::handle:horizontal { background: #343027; border-radius: 4px; }
+QScrollBar:vertical { background: transparent; width: 8px; margin: 0; }
+QScrollBar::handle:vertical { background: #2c2924; border-radius: 4px; min-height: 24px; }
+QScrollBar:horizontal { background: transparent; height: 8px; margin: 0; }
+QScrollBar::handle:horizontal { background: #2c2924; border-radius: 4px; min-width: 24px; }
+QScrollBar::add-line, QScrollBar::sub-line, QScrollBar::add-page, QScrollBar::sub-page, QScrollBar::corner {
+  background: transparent; border: none; width: 0; height: 0;
+}
 """
 
 
@@ -123,7 +134,7 @@ def main(argv=None):
     argv = list(sys.argv if argv is None else argv)
     try:
         from PySide6.QtCore import Qt, QTimer, QObject, Signal, QSize
-        from PySide6.QtGui import QFont, QKeyEvent
+        from PySide6.QtGui import QColor, QFont, QKeyEvent, QPalette
         from PySide6.QtWidgets import (
             QApplication,
             QButtonGroup,
@@ -137,8 +148,6 @@ def main(argv=None):
             QListWidgetItem,
             QMainWindow,
             QPushButton,
-            QScrollArea,
-            QSizePolicy,
             QSlider,
             QVBoxLayout,
             QWidget,
@@ -253,30 +262,24 @@ def main(argv=None):
             filters.addWidget(self.country_box)
             left_box.addLayout(filters)
 
-            host = QWidget()
-            genre_row = QHBoxLayout(host)
-            genre_row.setContentsMargins(0, 0, 0, 0)
-            genre_row.setSpacing(6)
             self.genre_group = QButtonGroup(self)
             self.genre_group.setExclusive(True)
-            for genre_id, label in GENRES:
-                button = QPushButton(label)
-                button.setObjectName("chip")
-                button.setCheckable(True)
-                button.setChecked(genre_id == "")
-                button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-                button.clicked.connect(lambda _=False, gid=genre_id: self.on_tag(gid))
-                self.genre_group.addButton(button)
-                genre_row.addWidget(button)
-            genre_row.addStretch(1)
-            genres = QScrollArea()
-            genres.setWidget(host)
-            genres.setWidgetResizable(False)
-            genres.setFixedHeight(48)
-            genres.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-            genres.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-            genres.setFrameShape(QFrame.NoFrame)
-            left_box.addWidget(genres)
+            for chunk in (GENRES[:6], GENRES[6:]):
+                genre_row = QHBoxLayout()
+                genre_row.setContentsMargins(0, 0, 0, 0)
+                genre_row.setSpacing(2)
+                for genre_id, label in chunk:
+                    button = QPushButton(label)
+                    button.setObjectName("chip")
+                    button.setFlat(True)
+                    button.setCursor(Qt.PointingHandCursor)
+                    button.setCheckable(True)
+                    button.setChecked(genre_id == "")
+                    button.clicked.connect(lambda _=False, gid=genre_id: self.on_tag(gid))
+                    self.genre_group.addButton(button)
+                    genre_row.addWidget(button)
+                genre_row.addStretch(1)
+                left_box.addLayout(genre_row)
 
             scopes = QHBoxLayout()
             self.scope_group = QButtonGroup(self)
@@ -285,6 +288,8 @@ def main(argv=None):
             for key, label in (("dial", "Dial"), ("saved", "Saved"), ("mine", "Mine")):
                 button = QPushButton(label)
                 button.setObjectName("ghost")
+                button.setFlat(True)
+                button.setCursor(Qt.PointingHandCursor)
                 button.setCheckable(True)
                 button.setChecked(key == "dial")
                 button.clicked.connect(lambda _=False, k=key: self.on_scope(k))
@@ -881,6 +886,18 @@ def main(argv=None):
     app.setApplicationName("Vela")
     app.setStyle("Fusion")
     app.setFont(QFont("Sans Serif", 11))
+    ink = QPalette()
+    ink.setColor(QPalette.Window, QColor("#141311"))
+    ink.setColor(QPalette.WindowText, QColor("#efe8dc"))
+    ink.setColor(QPalette.Base, QColor("#1e1c19"))
+    ink.setColor(QPalette.AlternateBase, QColor("#191816"))
+    ink.setColor(QPalette.Text, QColor("#efe8dc"))
+    ink.setColor(QPalette.Button, QColor("#1e1c19"))
+    ink.setColor(QPalette.ButtonText, QColor("#efe8dc"))
+    ink.setColor(QPalette.Highlight, QColor("#2a261f"))
+    ink.setColor(QPalette.HighlightedText, QColor("#efe8dc"))
+    ink.setColor(QPalette.PlaceholderText, QColor("#7c7468"))
+    app.setPalette(ink)
     app.setStyleSheet(QSS)
     window = Window()
     window.show()
