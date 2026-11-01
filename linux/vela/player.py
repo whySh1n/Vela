@@ -13,6 +13,7 @@ import time
 from urllib.parse import urlsplit
 
 EQS = ("flat", "voice", "night", "bass")
+CANCELLED = "Tuning stopped."
 _DEVICE = re.compile(r"^[A-Za-z0-9_.:/=+-]+$")
 _HOSTNAME = re.compile(r"^[a-z0-9_.-]+$")
 _HELP = re.compile(r"^\s*'([^']+)'\s+\((.*)\)\s*$")
@@ -127,6 +128,8 @@ class Player:
     # How long an https upgrade of an http station gets to start decoding
     # before Vela gives up on it and plays the original http address.
     UPGRADE_WAIT = 4.0
+    # How long any station gets to start decoding. Matches --network-timeout.
+    PLAY_WAIT = 12.0
 
     def __init__(self, volume=82, route=None):
         self.volume = max(0, min(100, int(volume)))
@@ -144,6 +147,8 @@ class Player:
         self.proc = None
         self.url = ""
         self._request = 0
+        self._play_gen = 0
+        self._cancelled_gen = -1
 
     def available(self):
         return shutil.which("mpv") is not None
@@ -163,7 +168,19 @@ class Player:
             return []
         return parse_devices((result.stdout or "") + "\n" + (result.stderr or ""))
 
+    def cancel(self):
+        """Abandon a play() in progress on another thread. Safe from any thread."""
+        self._cancelled_gen = self._play_gen
+        proc = self.proc
+        if proc and proc.poll() is None:
+            proc.terminate()
+
+    def _was_cancelled(self, gen):
+        return self._cancelled_gen == gen
+
     def play(self, url, allow_private=None):
+        self._play_gen += 1
+        gen = self._play_gen
         if allow_private is None:
             allow_private = self.allow_private
         checked = safe_url(url, allow_private=allow_private)
@@ -178,25 +195,22 @@ class Player:
             upgraded = safe_url("https://" + checked[len("http://") :], allow_private=allow_private)
             if upgraded:
                 urls = [upgraded, checked]
-        last = "This station did not answer."
         for position, candidate in enumerate(urls):
+            if self._was_cancelled(gen):
+                break
             self._start(candidate)
-            if position < len(urls) - 1:
-                # An upgrade attempt that is merely still connecting is not a
-                # success: it must be decoding audio, or the http form gets a turn.
-                if self._ready(self.UPGRADE_WAIT):
-                    self.url = candidate
-                    self.paused = False
-                    return None
-                continue
-            time.sleep(0.8)
-            if self.proc and self.proc.poll() is None:
+            # Still connecting is not playing. Each attempt must be decoding
+            # audio in time; an https upgrade gets less, then http has a turn.
+            wait = self.UPGRADE_WAIT if position < len(urls) - 1 else self.PLAY_WAIT
+            if self._ready(wait, gen):
                 self.url = candidate
                 self.paused = False
                 return None
-            last = "This station did not answer."
+        self.stop()
         self.url = ""
-        return last
+        if self._was_cancelled(gen):
+            return CANCELLED
+        return "This station did not answer."
 
     def _start(self, url):
         self.stop()
@@ -250,10 +264,12 @@ class Player:
     def alive(self):
         return self.proc is not None and self.proc.poll() is None
 
-    def _ready(self, timeout):
-        """True once mpv reports an audio codec, False if it exits or times out."""
+    def _ready(self, timeout, gen=None):
+        """True once mpv reports an audio codec; False if it exits, times out, or is cancelled."""
         deadline = time.monotonic() + timeout
         while time.monotonic() < deadline:
+            if gen is not None and self._was_cancelled(gen):
+                return False
             if not self.alive():
                 return False
             reply = self._reply(["get_property", "audio-codec-name"])
@@ -287,9 +303,9 @@ class Player:
         self.ipc(["set_property", "volume", 0 if self.muted else self.volume])
         self._apply_filters()
 
-    def set_device(self, device):
+    def set_device(self, device, restart=True):
         self.device = _safe_device(device)
-        if self.alive() and self.url:
+        if restart and self.alive() and self.url:
             paused = self.paused
             self.play(self.url)
             if paused and self.alive():

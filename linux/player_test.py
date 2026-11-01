@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 import textwrap
+import threading
 import time
 import unittest
 from pathlib import Path
@@ -39,9 +40,10 @@ class PlayerOptionsTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
 
 
-# Stands in for mpv. https behaviour comes from FAKE_MPV_HTTPS: "hang" keeps
-# connecting forever with no IPC, "serve" decodes. http always decodes. The
-# IPC socket sends an event before each reply, as mpv does.
+# Stands in for mpv. FAKE_MPV_HTTPS / FAKE_MPV_HTTP pick what each scheme
+# does: "hang" keeps connecting forever with no IPC, "exit" fails at once,
+# anything else decodes. The IPC socket sends an event before each reply,
+# as mpv does.
 FAKE_MPV = textwrap.dedent(
     """
     import json, os, socket, sys, threading, time
@@ -50,8 +52,11 @@ FAKE_MPV = textwrap.dedent(
     sock = next(a.split("=", 1)[1] for a in args if a.startswith("--input-ipc-server="))
     with open(os.environ["FAKE_MPV_LOG"], "a") as log:
         log.write(url + "\\n")
-    if url.startswith("https://") and os.environ.get("FAKE_MPV_HTTPS") == "hang":
+    mode = os.environ.get("FAKE_MPV_HTTPS" if url.startswith("https://") else "FAKE_MPV_HTTP", "")
+    if mode == "hang":
         time.sleep(60)
+        sys.exit(1)
+    if mode == "exit":
         sys.exit(1)
     server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     server.bind(sock)
@@ -78,7 +83,15 @@ class PlayFallbackTest(unittest.TestCase):
         script.write_text(f"#!{sys.executable}\n" + FAKE_MPV)
         script.chmod(0o755)
         self.log = root / "calls.log"
-        self.env = patch.dict(os.environ, {"PATH": f"{root}{os.pathsep}{os.environ.get('PATH', '')}", "FAKE_MPV_LOG": str(self.log)})
+        self.env = patch.dict(
+            os.environ,
+            {
+                "PATH": f"{root}{os.pathsep}{os.environ.get('PATH', '')}",
+                "FAKE_MPV_LOG": str(self.log),
+                "FAKE_MPV_HTTPS": "",
+                "FAKE_MPV_HTTP": "",
+            },
+        )
         self.env.start()
         self.sock = patch.object(player, "_runtime_socket", return_value=str(root / "player.sock"))
         self.sock.start()
@@ -109,6 +122,49 @@ class PlayFallbackTest(unittest.TestCase):
         self.assertIsNone(message)
         self.assertEqual(self.player.url, "https://radio.example.com/live")
         self.assertEqual(self.calls(), ["https://radio.example.com/live"])
+
+    def test_unreachable_station_is_an_error_not_playing(self):
+        os.environ["FAKE_MPV_HTTPS"] = "hang"
+        os.environ["FAKE_MPV_HTTP"] = "hang"
+        self.player.UPGRADE_WAIT = 0.5
+        self.player.PLAY_WAIT = 1.0
+        started = time.monotonic()
+        message = self.player.play("http://radio.example.com/live")
+        self.assertEqual(message, "This station did not answer.")
+        self.assertLess(time.monotonic() - started, 3)
+        self.assertEqual(self.player.url, "")
+        self.assertFalse(self.player.alive())
+
+    def test_a_stream_that_fails_at_once_is_reported_at_once(self):
+        os.environ["FAKE_MPV_HTTPS"] = "exit"
+        os.environ["FAKE_MPV_HTTP"] = "exit"
+        self.player.UPGRADE_WAIT = 10.0
+        self.player.PLAY_WAIT = 10.0
+        started = time.monotonic()
+        message = self.player.play("http://radio.example.com/live")
+        self.assertEqual(message, "This station did not answer.")
+        self.assertLess(time.monotonic() - started, 2)
+        self.assertEqual(self.calls(), ["https://radio.example.com/live", "http://radio.example.com/live"])
+
+    def test_cancel_abandons_a_station_that_is_still_tuning(self):
+        os.environ["FAKE_MPV_HTTPS"] = "hang"
+        os.environ["FAKE_MPV_HTTP"] = "hang"
+        self.player.PLAY_WAIT = 30.0
+        outcome = []
+        worker = threading.Thread(target=lambda: outcome.append(self.player.play("https://radio.example.com/live")))
+        worker.start()
+        time.sleep(0.4)
+        started = time.monotonic()
+        self.player.cancel()
+        worker.join(5)
+        self.assertFalse(worker.is_alive())
+        self.assertLess(time.monotonic() - started, 1.5)
+        self.assertEqual(outcome, [player.CANCELLED])
+        self.assertFalse(self.player.alive())
+        # The next station is not affected by the earlier cancel.
+        os.environ["FAKE_MPV_HTTPS"] = ""
+        self.assertIsNone(self.player.play("https://radio.example.com/other"))
+        self.assertEqual(self.player.url, "https://radio.example.com/other")
 
     def test_ipc_skips_events_to_find_its_reply(self):
         os.environ["FAKE_MPV_HTTPS"] = "serve"

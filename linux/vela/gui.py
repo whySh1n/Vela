@@ -518,6 +518,8 @@ def main(argv=None):
                 self._save_now()
             self.search_timer.stop()
             self.clock.stop()
+            # A dead station can tune for seconds; don't make closing wait for it.
+            self.player.cancel()
             with self.lock:
                 self._closing = True
                 self.token += 1
@@ -687,6 +689,8 @@ def main(argv=None):
             self.play_token += 1
             token = self.play_token
             url = station["streamUrl"]
+            # Let go of a station that is still tuning instead of queueing behind it.
+            self.player.cancel()
 
             def work():
                 with self.lock:

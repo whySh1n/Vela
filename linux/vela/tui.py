@@ -77,6 +77,10 @@ class App:
         self.searching = False
         self._search_token = 0
         self._found = queue.SimpleQueue()
+        self.tuning = False
+        self._play_token = 0
+        self._played = queue.SimpleQueue()
+        self._play_lock = threading.Lock()
 
     def visible(self):
         if self.scope == "saved":
@@ -109,13 +113,13 @@ class App:
         threading.Thread(target=work, daemon=True).start()
 
     def collect(self):
-        """Apply the newest search answer, if one has arrived. Older ones are dropped."""
+        """Apply the newest search and play answers, if any arrived. Older ones are dropped."""
         changed = False
         while True:
             try:
                 token, rows, err = self._found.get_nowait()
             except queue.Empty:
-                return changed
+                break
             if token != self._search_token:
                 continue
             self.searching = False
@@ -124,6 +128,59 @@ class App:
             self.note = "" if err else f"{len(rows)} stations"
             self.selected = 0
             changed = True
+        while True:
+            try:
+                token, message = self._played.get_nowait()
+            except queue.Empty:
+                break
+            if token != self._play_token:
+                continue
+            self.tuning = False
+            changed = True
+            if message:
+                self.error = message
+                self.note = ""
+                self.started = None
+            else:
+                # Volume, mute, balance or tone may have moved while tuning.
+                self.player.sync()
+                self.started = time.time()
+                self.error = ""
+                self.note = "on air"
+                self.remember_volume()
+        return changed
+
+    def start_play(self, url, allow_private):
+        """Tune in the background; collect() reports the outcome. Cancels any tune in progress."""
+        self.player.cancel()
+        self._play_token += 1
+        token = self._play_token
+        self.tuning = True
+        self.started = None
+        self.error = ""
+
+        def work():
+            with self._play_lock:
+                if token != self._play_token:
+                    return
+                message = self.player.play(url, allow_private=allow_private)
+            self._played.put((token, message))
+
+        threading.Thread(target=work, daemon=True).start()
+
+    def stop_tuning(self):
+        self._play_token += 1
+        self.player.cancel()
+        self.tuning = False
+        self.note = "stopped"
+
+    def shutdown(self):
+        """Cancel tuning, wait briefly for the worker, and stop mpv."""
+        self._play_token += 1
+        self.player.cancel()
+        if self._play_lock.acquire(timeout=3):
+            self._play_lock.release()
+        self.player.stop()
 
     def play_index(self, index):
         rows = self.visible()
@@ -133,17 +190,8 @@ class App:
         self.selected = index
         station = rows[index]
         self.current = station
-        self.error = ""
         self.note = f"tuning {station['name']}…"
-        message = self.player.play(station["streamUrl"], allow_private=bool(station.get("custom")))
-        if message:
-            self.error = message
-            self.note = ""
-            self.started = None
-        else:
-            self.started = time.time()
-            self.note = "on air"
-            self.remember_volume()
+        self.start_play(station["streamUrl"], allow_private=bool(station.get("custom")))
 
     def clamp(self):
         rows = self.visible()
@@ -185,11 +233,7 @@ class App:
         self.scope = "mine"
         self.current = station
         self.note = f"added {station['name']}"
-        message = self.player.play(url, allow_private=True)
-        if message:
-            self.error = message
-        else:
-            self.started = time.time()
+        self.start_play(url, allow_private=True)
 
     def remember_volume(self):
         self.lib["volume"] = self.player.volume
@@ -216,7 +260,12 @@ class App:
     def tick(self):
         self.collect()
         if self.sleep_at and time.time() >= self.sleep_at:
-            self.player.toggle() if self.player.alive() and not self.player.paused else self.player.stop()
+            if self.tuning:
+                self.stop_tuning()
+            elif self.player.alive() and not self.player.paused:
+                self.player.toggle()
+            else:
+                self.player.stop()
             self.sleep_at = None
             self.note = "the dial rested"
         if self.current and self.started and not self.player.alive() and not self.player.paused and not self.error:
@@ -348,7 +397,7 @@ def draw(stdscr, app: App):
     if app.sleep_at:
         left = max(0, int(app.sleep_at - time.time()))
         sleep = f"  sleep {left // 60}:{left % 60:02d}"
-    state = "paused" if app.player.paused else "playing" if app.player.alive() else "idle"
+    state = "tuning" if app.tuning else "paused" if app.player.paused else "playing" if app.player.alive() else "idle"
     put(stdscr, now_y, 0, "now", muted)
     put(stdscr, now_y + 1, 0, name, amber if app.player.alive() else 0)
     route = app.player.route_label()
@@ -367,7 +416,7 @@ def handle(stdscr, app: App, key):
         return
     rows = app.visible()
     if key in (ord("q"), ord("Q")):
-        app.player.stop()
+        app.shutdown()
         raise SystemExit
     if key == ord("?"):
         app.help = True
@@ -383,7 +432,9 @@ def handle(stdscr, app: App, key):
         app.play_index(app.selected)
         return
     if key == ord(" "):
-        if app.player.alive():
+        if app.tuning:
+            app.stop_tuning()
+        elif app.player.alive():
             app.player.toggle()
             app.note = "paused" if app.player.paused else "on air"
         else:
@@ -410,7 +461,9 @@ def handle(stdscr, app: App, key):
         ids = [item["id"] for item in app.outputs]
         index = ids.index(app.player.device) if app.player.device in ids else -1
         nxt = app.outputs[(index + 1) % len(app.outputs)]
-        app.player.set_device(nxt["id"])
+        app.player.set_device(nxt["id"], restart=False)
+        if app.player.url and app.player.alive() and not app.tuning:
+            app.start_play(app.player.url, app.player.allow_private)
         app.remember_route()
         app.note = nxt["label"]
         return
@@ -508,15 +561,18 @@ def run(stdscr):
         pass
     init_colors()
     app = App()
-    draw(stdscr, app)
-    app.search()
-    while True:
-        app.tick()
+    try:
         draw(stdscr, app)
-        key = stdscr.getch()
-        if key == -1:
-            continue
-        handle(stdscr, app, key)
+        app.search()
+        while True:
+            app.tick()
+            draw(stdscr, app)
+            key = stdscr.getch()
+            if key == -1:
+                continue
+            handle(stdscr, app, key)
+    finally:
+        app.shutdown()
 
 
 def main():

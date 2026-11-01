@@ -109,6 +109,8 @@ CHILD = textwrap.dedent(
             results["lit"] = [lit(row) for row in range(4)]
 
             # Bug 5: a single click plays, once; clicking the live station again does not restart it.
+            cancels = []
+            window.player.cancel = lambda: cancels.append(1)
             plays.clear()
             row_widget = window.list.itemWidget(window.list.item(3))
             point = row_widget.rect().center()
@@ -120,6 +122,7 @@ CHILD = textwrap.dedent(
             QTest.mouseClick(row_widget, Qt.LeftButton, Qt.NoModifier, point)
             settle(app, 0.3)
             results["plays_after_second_click"] = len(plays)
+            results["cancels_after_click"] = len(cancels)
 
             # Bug 4: the UI does not wait for a worker that holds the lock,
             # and what changed meanwhile reaches mpv once tuning ends.
@@ -162,7 +165,19 @@ CHILD = textwrap.dedent(
             window.vol.setValue(12)
 
             print("RESULTS " + json.dumps(results), flush=True)
+
+            # Closing while a dead station tunes must not wait for it.
+            gate = threading.Event()
+            def slow(url, allow_private=False):
+                gate.wait(10)
+                return "Tuning stopped."
+            window.player.play = slow
+            window.player.cancel = gate.set
+            window.play_index(0)
+            settle(app, 0.1)
+            start = time.time()
             window.close()
+            print("CLOSE_SECONDS %.2f" % (time.time() - start), flush=True)
 
         QTimer.singleShot(40, work)
         return original_exec()
@@ -226,6 +241,13 @@ class WindowTest(unittest.TestCase):
     def test_sliders_write_the_library_once_they_settle(self):
         self.assertEqual(self.results["saves_while_dragging"], 0)
         self.assertEqual(self.results["saves_after_settle"], [69])
+
+    def test_starting_a_station_cancels_one_still_tuning(self):
+        self.assertEqual(self.results["cancels_after_click"], 1)
+
+    def test_closing_does_not_wait_for_a_dead_station(self):
+        line = next(item for item in self.stdout.splitlines() if item.startswith("CLOSE_SECONDS "))
+        self.assertLess(float(line.split()[1]), 1.0)
 
     def test_closing_flushes_a_pending_save(self):
         self.assertIn("SAVED_VOLUME 12", self.stdout)

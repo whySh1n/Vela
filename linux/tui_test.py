@@ -143,5 +143,93 @@ class CustomStreamTest(TuiCase):
         self.assertTrue(all(item.startswith("custom:") for item in ids))
 
 
+class FakeTuner:
+    """Stands in for Player.play/cancel: each play waits until released or cancelled."""
+
+    def __init__(self, app, outcome=None):
+        self.app = app
+        self.outcome = outcome
+        self.release = threading.Event()
+        self.cancels = 0
+        self.urls = []
+        self.synced = 0
+        app.player.play = self.play
+        app.player.cancel = self.cancel
+        app.player.sync = self.sync
+
+    def play(self, url, allow_private=False):
+        self.urls.append(url)
+        self.release.wait(5)
+        self.release.clear()
+        return self.outcome
+
+    def cancel(self):
+        self.cancels += 1
+        self.release.set()
+
+    def sync(self):
+        self.synced += 1
+
+
+class TuningTest(TuiCase):
+    def setUp(self):
+        super().setUp()
+        self.app = tui.App()
+        self.app.stations = [station(1), station(2)]
+
+    def test_play_returns_at_once_and_reports_on_air_later(self):
+        tuner = FakeTuner(self.app)
+        started = time.monotonic()
+        self.app.play_index(0)
+        self.assertLess(time.monotonic() - started, 0.5)
+        self.assertTrue(self.app.tuning)
+        self.assertIsNone(self.app.started)
+        tuner.release.set()
+        self.assertTrue(collect_until(self.app, lambda: not self.app.tuning))
+        self.assertEqual(self.app.note, "on air")
+        self.assertEqual(self.app.error, "")
+        self.assertIsNotNone(self.app.started)
+        self.assertEqual(tuner.synced, 1)
+
+    def test_a_dead_station_shows_its_error(self):
+        tuner = FakeTuner(self.app, outcome="This station did not answer.")
+        self.app.play_index(0)
+        tuner.release.set()
+        self.assertTrue(collect_until(self.app, lambda: not self.app.tuning))
+        self.assertEqual(self.app.error, "This station did not answer.")
+        self.assertIsNone(self.app.started)
+
+    def test_choosing_another_station_cancels_the_first(self):
+        tuner = FakeTuner(self.app, outcome=None)
+        self.app.play_index(0)
+        time.sleep(0.1)
+        self.app.play_index(1)
+        self.assertGreaterEqual(tuner.cancels, 2)
+        time.sleep(0.2)
+        tuner.release.set()
+        self.assertTrue(collect_until(self.app, lambda: not self.app.tuning))
+        self.assertEqual(self.app.current["id"], "s2")
+        self.assertEqual(tuner.urls[-1], station(2)["streamUrl"])
+
+    def test_space_while_tuning_stops_it(self):
+        FakeTuner(self.app)
+        self.app.play_index(0)
+        tui.handle(None, self.app, ord(" "))
+        self.assertFalse(self.app.tuning)
+        self.assertEqual(self.app.note, "stopped")
+        time.sleep(0.2)
+        self.app.collect()
+        self.assertEqual(self.app.error, "")
+        self.assertNotEqual(self.app.note, "on air")
+
+    def test_quitting_does_not_wait_for_a_dead_station(self):
+        FakeTuner(self.app)
+        self.app.play_index(0)
+        time.sleep(0.1)
+        started = time.monotonic()
+        self.app.shutdown()
+        self.assertLess(time.monotonic() - started, 1)
+
+
 if __name__ == "__main__":
     unittest.main()
