@@ -186,7 +186,7 @@ class Player:
             "--ytdl=no",
             "--load-unsafe-playlists=no",
             "--network-timeout=12",
-            "--demuxer-lavf-o=protocol_whitelist=http,https,tcp,tls,crypto,hls",
+            "--demuxer-lavf-o-append=protocol_whitelist=http,https,tcp,tls,crypto,hls",
             f"--volume={0 if self.muted else self.volume}",
             f"--input-ipc-server={self.sock}",
         ]
