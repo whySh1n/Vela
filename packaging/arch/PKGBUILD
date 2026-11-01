@@ -1,0 +1,42 @@
+# Maintainer: Tomasz Czopek <tomasz.czopek@me.com>
+pkgname=vela
+pkgver=0.1.0
+pkgrel=1
+pkgdesc="Quiet internet radio: a Qt window and a terminal player, sound through mpv"
+arch=('any')
+url="https://github.com/whySh1n/Vela"
+license=('MIT')
+depends=('python' 'mpv' 'pyside6')
+source=("$pkgname-$pkgver.tar.gz::$url/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+check() {
+  cd "Vela-$pkgver/linux"
+  # The window tests draw offscreen; the player tests use a fake mpv.
+  QT_QPA_PLATFORM=offscreen QT_QPA_PLATFORMTHEME=none \
+    python -m unittest player_test tui_test window_test shutdown_test
+}
+
+package() {
+  cd "Vela-$pkgver/linux"
+
+  install -d "$pkgdir/usr/lib/vela"
+  install -m644 vela/*.py "$pkgdir/usr/lib/vela/"
+  python -m compileall -q -d /usr/lib/vela "$pkgdir/usr/lib/vela"
+
+  install -d "$pkgdir/usr/bin"
+  printf '#!/bin/sh\nexec python3 /usr/lib/vela/__main__.py "$@"\n' > "$pkgdir/usr/bin/vela"
+  chmod 755 "$pkgdir/usr/bin/vela"
+
+  install -d "$pkgdir/usr/share/applications"
+  for entry in vela vela-term; do
+    sed 's|__PREFIX__|/usr|g' "share/applications/$entry.desktop" \
+      > "$pkgdir/usr/share/applications/$entry.desktop"
+    chmod 644 "$pkgdir/usr/share/applications/$entry.desktop"
+  done
+  install -Dm644 share/icons/vela.svg "$pkgdir/usr/share/icons/hicolor/scalable/apps/vela.svg"
+
+  install -Dm644 ../LICENSE "$pkgdir/usr/share/licenses/$pkgname/LICENSE"
+  install -Dm644 README.md "$pkgdir/usr/share/doc/$pkgname/README.md"
+  install -Dm644 ../docs/linux.md "$pkgdir/usr/share/doc/$pkgname/manual.md"
+}

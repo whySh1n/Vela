@@ -10,3 +10,5 @@ artifacts/
 .env
 .env.*
 .node_modules.lock
+packaging/arch/out/
+*.pkg.tar.zst
