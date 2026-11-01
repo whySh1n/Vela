@@ -57,7 +57,8 @@ def place_line(station):
 class App:
     def __init__(self):
         self.lib = library.load()
-        self.player = player.Player(self.lib["volume"])
+        self.player = player.Player(self.lib["volume"], self.lib.get("route"))
+        self.outputs = []
         self.scope = "dial"
         self.tag = ""
         self.country = ""
@@ -160,6 +161,14 @@ class App:
         self.lib["volume"] = self.player.volume
         library.save(self.lib)
 
+    def remember_route(self):
+        self.lib["route"] = {
+            "device": self.player.device,
+            "balance": self.player.balance,
+            "eq": self.player.eq,
+        }
+        library.save(self.lib)
+
     def cycle_sleep(self):
         current = 0
         if self.sleep_at:
@@ -252,6 +261,9 @@ def draw(stdscr, app: App):
             "f      save",
             "n p    next or previous",
             "m      mute",
+            "o      next output",
+            "[ ]    balance",
+            "e      tone: flat, voice, night, bass",
             "s      sleep",
             "/      search",
             "a      add a stream",
@@ -304,6 +316,9 @@ def draw(stdscr, app: App):
     state = "paused" if app.player.paused else "playing" if app.player.alive() else "idle"
     put(stdscr, now_y, 0, "now", muted)
     put(stdscr, now_y + 1, 0, name, amber if app.player.alive() else 0)
+    route = app.player.route_label()
+    if route:
+        detail = f"{detail}  ·  {route}"
     put(stdscr, now_y + 2, 0, f"{detail}  ·  {state}  ·  vol {vol}{sleep}{listened}", muted)
     footer_note = app.error or app.note
     put(stdscr, height - 2, 0, footer_note, amber if app.error else muted)
@@ -352,6 +367,34 @@ def handle(stdscr, app: App, key):
         app.player.toggle_mute()
         app.remember_volume()
         app.note = "muted" if app.player.muted else "sound on"
+        return
+    if key == ord("o"):
+        if not app.outputs:
+            app.note = "reading outputs…"
+            app.outputs = app.player.devices() or [{"id": "auto", "label": "System default"}]
+        ids = [item["id"] for item in app.outputs]
+        index = ids.index(app.player.device) if app.player.device in ids else -1
+        nxt = app.outputs[(index + 1) % len(app.outputs)]
+        app.player.set_device(nxt["id"])
+        app.remember_route()
+        app.note = nxt["label"]
+        return
+    if key == ord("["):
+        app.player.set_balance(app.player.balance - 0.2)
+        app.remember_route()
+        app.note = "balance center" if abs(app.player.balance) < 0.05 else f"balance {'left' if app.player.balance < 0 else 'right'}"
+        return
+    if key == ord("]"):
+        app.player.set_balance(app.player.balance + 0.2)
+        app.remember_route()
+        app.note = "balance center" if abs(app.player.balance) < 0.05 else f"balance {'left' if app.player.balance < 0 else 'right'}"
+        return
+    if key == ord("e"):
+        order = ("flat", "voice", "night", "bass")
+        index = order.index(app.player.eq) if app.player.eq in order else 0
+        app.player.set_eq(order[(index + 1) % len(order)])
+        app.remember_route()
+        app.note = f"tone {app.player.eq}"
         return
     if key == ord("s"):
         app.cycle_sleep()

@@ -46,6 +46,9 @@ The terminal starts on the top of the directory. `j` and `k` move, Enter plays, 
 | n p | Next or previous |
 | m | Mute |
 | s | Sleep |
+| o | Next audio output |
+| [ ] | Balance left or right |
+| e | Tone: flat, voice, night, bass |
 | + − | Volume |
 | / | Search. Also `:place France`, `:tag jazz`, `:add Name \| https://stream` |
 | a | Add a stream (it asks for a name, then the address) |

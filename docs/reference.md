@@ -34,6 +34,31 @@ The stream address prefers an `https://` URL from the directory. If the catalog 
 
 Vela does not count a “click” back to Radio Browser. Playback uses the URL from search.
 
+## Audio route
+
+The browser and the Linux player do not route sound the same way.
+
+In the browser, Vela can:
+
+- Send the `<audio>` element to a chosen output with `setSinkId`, when the browser allows it. Chrome and Edge open a device picker. A browser without that API stays on the system output. The choice is remembered in `localStorage`.
+- Crossfade between two audio elements. Off is a cut. Short is 0.6 seconds. Long is 1.6 seconds. The station you are leaving keeps playing until the new one has started, then the levels move in opposite directions. If the new station never starts, both stop.
+
+Vela does not run the stream through the Web Audio graph. Most stations omit the CORS headers that graph would need, and without them the graph plays silence. Balance and equalization therefore stay out of the browser.
+
+In the Linux terminal, mpv owns the stream:
+
+| Control | Key | What it changes |
+| --- | --- | --- |
+| Output | o | Cycles `mpv --audio-device=help`. `auto` is the system default. Changing output restarts the stream. |
+| Balance | [ ] | Steps stereotools balance by 0.2, from full left to full right. |
+| Tone | e | Flat, voice (high-pass and a little treble), night (less bass and treble), or bass. |
+
+The filter string is an allow-list, not free text. The device id has to match the characters mpv prints. Both are stored in `~/.config/vela/library.json` under `route`, and the next `vela` starts with them. Volume saves do not wipe the route.
+
+Tone and balance are ffmpeg filters (`bass`, `treble`, `highpass`, `stereotools`). A build of mpv without those filters will ignore them or fail to open the stream; set the tone back to flat with `e`.
+
+The Linux desk page still plays in the browser, so it has the browser’s limits. Output, balance, and tone in this section are the `vela` terminal.
+
 ## Playback in the browser
 
 One audio element is shared by Desk and Terminal.
@@ -93,6 +118,8 @@ Stored:
 
 - mode (`desk` or `terminal`)
 - volume and mute
+- output device id and label
+- crossfade (off, short, or long)
 - favorites (up to 200)
 - custom streams (up to 200)
 
@@ -144,7 +171,8 @@ TanStack Start, React, and Tailwind CSS 4.
 | `src/components/vela/app.tsx` | Header, search, keyboard, mode |
 | `src/components/vela/desk.tsx` | Desk layout |
 | `src/components/vela/terminal.tsx` | Terminal layout |
-| `src/components/vela/engine.tsx` | Audio |
+| `src/components/vela/engine.tsx` | Audio, output device, crossfade |
+| `src/components/vela/route.tsx` | Route panel |
 | `src/components/vela/rows.tsx` | Station rows |
 | `src/components/vela/overlays.tsx` | Add form and key card |
 | `src/lib/radio.functions.ts` | Server-side directory proxy |

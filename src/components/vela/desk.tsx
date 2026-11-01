@@ -4,6 +4,7 @@ import { GENRES, formatClock, monogram, techLine } from "@/lib/stations";
 import { useEngine } from "@/components/vela/engine";
 import { useLibrary } from "@/lib/store";
 import { SkeletonRows, StationRows } from "@/components/vela/rows";
+import { RoutePanel } from "@/components/vela/route";
 import type { DialProps } from "@/components/vela/dial";
 
 const field =
@@ -182,6 +183,8 @@ export function Desk(props: DialProps) {
             </a>
           ) : null}
         </div>
+
+        <RoutePanel />
 
         <label className="flex items-center gap-3 border-t border-line px-4 py-3 text-sm text-muted lg:px-6">
           <span className="w-8 shrink-0 font-mono text-xs tabular-nums text-fg">

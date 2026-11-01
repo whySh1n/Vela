@@ -3,6 +3,7 @@ import { GENRES, formatClock, techLine } from "@/lib/stations";
 import { useEngine } from "@/components/vela/engine";
 import { useLibrary } from "@/lib/store";
 import { StationRows } from "@/components/vela/rows";
+import { RoutePanel } from "@/components/vela/route";
 import type { DialProps } from "@/components/vela/dial";
 
 export function Terminal(props: DialProps) {
@@ -117,6 +118,7 @@ export function Terminal(props: DialProps) {
         {engine.error ? <p className="mt-1 text-fg">{engine.error}</p> : null}
         {props.commandNote ? <p className="mt-1 text-dial">{props.commandNote}</p> : null}
       </div>
+      <RoutePanel />
       <form onSubmit={submit} className="flex items-center gap-2 border-t border-line px-4">
         <span className="text-dial" aria-hidden="true">
           /

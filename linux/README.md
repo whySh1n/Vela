@@ -41,6 +41,9 @@ Menu entries are **Vela** and **Vela Terminal**.
 | f | Save or unsave |
 | n p | Next or previous |
 | m | Mute |
+| o | Next audio output |
+| [ ] | Balance, left or right |
+| e | Tone: flat, voice, night, bass |
 | s | Sleep timer |
 | / | Search. Also `:place France`, `:tag jazz`, `:add Name \| https://stream` |
 | a | Add your own stream |
@@ -50,3 +53,5 @@ Menu entries are **Vela** and **Vela Terminal**.
 Click a row if your terminal sends mouse events.
 
 Stations come from the public [Radio Browser](https://www.radio-browser.info/) directory. Streams that are only available over plain http still play here. A secure browser sometimes cannot play those.
+
+Output, balance, and tone are applied by mpv and remembered in the library file. `o` walks the devices mpv can see, including PipeWire and Pulse sinks. `[` and `]` move the balance. `e` cycles flat, voice, night, and bass.

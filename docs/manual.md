@@ -61,6 +61,14 @@ These work when you are not typing in a field.
 
 Escape closes the key card and the add form.
 
+## Route
+
+**Route** sits above the volume control.
+
+- **Output** sends this browser’s sound to headphones, speakers, or another device. **System default** puts it back. Some browsers have no output picker; they keep the system device.
+- **Crossfade** is Off, Short, or Long. Off cuts straight to the next station. Short and Long let the new station arrive while the old one leaves.
+- Balance and tone are not applied in the browser. A secure page cannot reshape most radio streams without silencing them. The Linux player does that with mpv.
+
 ## What is remembered
 
-Saved stations, your own streams, volume, mute, and which mode you last used stay in this browser. Clearing site data clears them. There is no login.
+Saved stations, your own streams, volume, mute, the chosen output, crossfade, and which mode you last used stay in this browser. Clearing site data clears them. There is no login.

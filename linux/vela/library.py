@@ -7,6 +7,7 @@ import os
 import tempfile
 
 MAX_STATIONS = 200
+EQS = ("flat", "voice", "night", "bass")
 
 
 def path():
@@ -43,8 +44,21 @@ def _station(value):
     }
 
 
+def _route(value):
+    raw = value if isinstance(value, dict) else {}
+    device = str(raw.get("device") or "auto").strip()[:180] or "auto"
+    try:
+        balance = float(raw.get("balance") or 0)
+    except (TypeError, ValueError):
+        balance = 0.0
+    eq = str(raw.get("eq") or "flat")
+    if eq not in EQS:
+        eq = "flat"
+    return {"device": device, "balance": round(max(-1.0, min(1.0, balance)), 2), "eq": eq}
+
+
 def empty():
-    return {"favorites": [], "custom": [], "volume": 82}
+    return {"favorites": [], "custom": [], "volume": 82, "route": _route(None)}
 
 
 def load():
@@ -74,6 +88,7 @@ def load():
         "favorites": favorites[:MAX_STATIONS],
         "custom": custom[:MAX_STATIONS],
         "volume": max(0, min(100, volume)),
+        "route": _route(raw.get("route")),
     }
 
 
@@ -93,10 +108,13 @@ def save(library):
         volume = int(library.get("volume", 82))
     except (TypeError, ValueError):
         volume = 82
+    current = load()
+    route = _route(library["route"]) if isinstance(library, dict) and "route" in library else current["route"]
     payload = {
         "favorites": favorites[:MAX_STATIONS],
         "custom": custom[:MAX_STATIONS],
         "volume": max(0, min(100, volume)),
+        "route": route,
     }
     target = path()
     folder = os.path.dirname(target)

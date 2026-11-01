@@ -4,18 +4,71 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import socket
 import subprocess
 import tempfile
 import time
 
+EQS = ("flat", "voice", "night", "bass")
+_DEVICE = re.compile(r"^[A-Za-z0-9_.:/=+-]+$")
+_HELP = re.compile(r"^\s*'([^']+)'\s+\((.*)\)\s*$")
+
+
+def parse_devices(text):
+    devices = []
+    seen = set()
+    for line in text.splitlines():
+        match = _HELP.match(line)
+        if not match:
+            continue
+        device_id = match.group(1).strip()
+        if not device_id or device_id in seen or _safe_device(device_id) != device_id:
+            continue
+        seen.add(device_id)
+        devices.append({"id": device_id, "label": match.group(2).strip() or device_id})
+    return devices
+
+
+def _safe_device(device):
+    if not device or device == "auto":
+        return "auto"
+    if len(device) > 180 or not _DEVICE.match(device):
+        return "auto"
+    return device
+
+
+def _filter(balance, eq):
+    parts = []
+    if abs(balance) >= 0.05:
+        parts.append(f"stereotools=balance_out={balance:.2f}")
+    if eq == "voice":
+        parts.append("highpass=f=140")
+        parts.append("treble=g=3")
+    elif eq == "night":
+        parts.append("bass=g=-3")
+        parts.append("treble=g=-4")
+    elif eq == "bass":
+        parts.append("bass=g=7")
+        parts.append("treble=g=-1")
+    if not parts:
+        return ""
+    return "lavfi=[" + ",".join(parts) + "]"
+
 
 class Player:
-    def __init__(self, volume=82):
+    def __init__(self, volume=82, route=None):
         self.volume = max(0, min(100, int(volume)))
         self.muted = False
         self.paused = False
+        route = route or {}
+        self.device = _safe_device(route.get("device"))
+        try:
+            self.balance = max(-1.0, min(1.0, float(route.get("balance") or 0)))
+        except (TypeError, ValueError):
+            self.balance = 0.0
+        self.eq = route.get("eq") if route.get("eq") in EQS else "flat"
         self.sock = os.path.join(tempfile.gettempdir(), f"vela-{os.getuid()}.sock")
         self.proc = None
         self.url = ""
@@ -23,6 +76,21 @@ class Player:
 
     def available(self):
         return shutil.which("mpv") is not None
+
+    def devices(self):
+        if not self.available():
+            return []
+        try:
+            result = subprocess.run(
+                ["mpv", "--audio-device=help"],
+                capture_output=True,
+                text=True,
+                timeout=4,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired):
+            return []
+        return parse_devices((result.stdout or "") + "\n" + (result.stderr or ""))
 
     def play(self, url):
         if not self.available():
@@ -49,18 +117,23 @@ class Player:
                 os.remove(self.sock)
             except OSError:
                 pass
+        command = [
+            "mpv",
+            "--no-video",
+            "--no-terminal",
+            "--really-quiet",
+            "--idle=no",
+            f"--volume={0 if self.muted else self.volume}",
+            f"--input-ipc-server={self.sock}",
+        ]
+        if self.device != "auto":
+            command.append(f"--audio-device={self.device}")
+        filt = _filter(self.balance, self.eq)
+        if filt:
+            command.append(f"--af={filt}")
+        command.extend(["--", url])
         self.proc = subprocess.Popen(
-            [
-                "mpv",
-                "--no-video",
-                "--no-terminal",
-                "--really-quiet",
-                "--idle=no",
-                f"--volume={0 if self.muted else self.volume}",
-                f"--input-ipc-server={self.sock}",
-                "--",
-                url,
-            ],
+            command,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
@@ -93,6 +166,48 @@ class Player:
     def toggle_mute(self):
         self.muted = not self.muted
         self.ipc(["set_property", "volume", 0 if self.muted else self.volume])
+
+    def set_device(self, device):
+        self.device = _safe_device(device)
+        if self.alive() and self.url:
+            paused = self.paused
+            self.play(self.url)
+            if paused and self.alive():
+                self.toggle()
+        return self.device
+
+    def set_balance(self, balance):
+        try:
+            self.balance = max(-1.0, min(1.0, round(float(balance), 2)))
+        except (TypeError, ValueError):
+            self.balance = 0.0
+        self._apply_filters()
+        return self.balance
+
+    def set_eq(self, eq):
+        self.eq = eq if eq in EQS else "flat"
+        self._apply_filters()
+        return self.eq
+
+    def _apply_filters(self):
+        if not self.alive():
+            return
+        filt = _filter(self.balance, self.eq)
+        if filt:
+            self.ipc(["af", "set", filt])
+        else:
+            self.ipc(["af", "clr", ""])
+
+    def route_label(self):
+        bits = []
+        if self.device != "auto":
+            bits.append("output")
+        if self.eq != "flat":
+            bits.append(self.eq)
+        if abs(self.balance) >= 0.05:
+            side = "L" if self.balance < 0 else "R"
+            bits.append(f"{side}{int(round(abs(self.balance) * 100))}")
+        return " · ".join(bits)
 
     def ipc(self, command):
         if not os.path.exists(self.sock):
