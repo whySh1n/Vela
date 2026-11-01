@@ -1,74 +1,23 @@
 # Vela — short manual
 
-The browser app. Two minutes, then you are listening.
+Vela is the Linux player. Install and both programs are in the [Linux manual](linux.md).
 
-## Start
+## Window
 
-Open Vela. The dial loads the highest-voted working stations. Tap a row and it tunes in. The panel on the right (or the bar along the bottom of a phone) is what is on the air.
+`vela` opens it.
 
-## Find a station
+- Search, country, and the genre chips change the directory.
+- **Dial**, **Saved**, and **Mine** are the three lists. **Add** puts your own stream in Mine.
+- Click a row to play. The amber button pauses. A star saves.
+- **Output**, **Balance**, and **Tone** are sent to mpv. They stay after you quit.
+- **Sleep** is 15, 30, 45, 60, or 90 minutes, then off.
 
-- Type in **Search stations**. Results update as you type.
-- **Place** narrows by country, for example `France` or `Japan`.
-- Genre chips (**Jazz**, **News**, **Ambient**, and the rest) replace the list with that tag. **Top** clears the genre.
-- **Dial** is the directory. **Saved** is what you starred. **Mine** is streams you added.
+Space plays or pauses. J and K move. Enter plays. F saves. Slash focuses search. Ctrl+Q quits.
 
-## Play
+## Terminal
 
-- Tap a station to play it.
-- The round amber button pauses and resumes.
-- **Prev** and **Next** move through the list you are looking at.
-- The slider is volume. The speaker in the header mutes.
-- A star saves the station. Tap it again to unsave.
-- **Add** asks for a name and a stream address (`http://` or `https://`). The station is saved and starts playing.
+`vela --term`
 
-## Sleep
+J and K move, Enter plays, Space pauses, Q quits. `o` changes the output, `[` and `]` move the balance, `e` changes the tone.
 
-**Sleep** in the header cycles 15, 30, 45, 60, and 90 minutes, then off. When the time runs out, Vela pauses and says the dial rested.
-
-## Desk and terminal
-
-**Desk** is the visual player. **Terminal** is the same stations in a fixed-width layout.
-
-In Terminal, type and press Enter:
-
-| You type | What happens |
-| --- | --- |
-| `jazz` or `/jazz` | Search that name |
-| `:place France` | Filter by country. `:place` alone clears it |
-| `:tag ambient` | Filter by tag. `:tag` alone clears it |
-| `:add Night desk \| https://example.com/stream` | Add your stream |
-| `:help` or `?` | Show the keys |
-
-## Keys
-
-These work when you are not typing in a field.
-
-| Key | Action |
-| --- | --- |
-| Space | Play or pause |
-| J / K or arrows | Move the highlight |
-| Enter | Play the highlighted station |
-| F | Save or unsave |
-| N / P | Next or previous |
-| M | Mute |
-| S | Sleep timer |
-| / | Focus search |
-| A | Add a stream |
-| \ | Desk or terminal |
-| ? | Key card |
-| + / − | Volume |
-
-Escape closes the key card and the add form.
-
-## Route
-
-**Route** sits above the volume control.
-
-- **Output** sends this browser’s sound to headphones, speakers, or another device. **System default** puts it back. Some browsers have no output picker; they keep the system device.
-- **Crossfade** is Off, Short, or Long. Off cuts straight to the next station. Short and Long let the new station arrive while the old one leaves.
-- Balance and tone are not applied in the browser. A secure page cannot reshape most radio streams without silencing them. The Linux player does that with mpv.
-
-## What is remembered
-
-Saved stations, your own streams, volume, mute, the chosen output, crossfade, and which mode you last used stay in this browser. Clearing site data clears them. There is no login.
+Saved stations are in `~/.config/vela/library.json`.

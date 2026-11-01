@@ -13,7 +13,7 @@ export const Route = createRootRoute({
       { title: APP_NAME },
       {
         name: "description",
-        content: "Vela is a quiet radio for the desk and the terminal.",
+        content: "Vela is a Linux radio player for the window and the terminal.",
       },
       { name: "theme-color", content: "#12110e" },
     ],

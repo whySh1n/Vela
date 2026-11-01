@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Vela Terminal
 Comment=Late night radio in the terminal
-Exec=__PREFIX__/bin/vela
+Exec=__PREFIX__/bin/vela --term
 Icon=vela
 Terminal=true
 Type=Application

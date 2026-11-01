@@ -1,11 +1,11 @@
 # Vela
 
-A quiet radio for late nights. Two programs, one library of saved stations.
+A radio player for Arch Linux and Debian. Two programs, one library.
 
-- **Terminal** — keyboard-first, plays through mpv
-- **Desktop** — a small window in your browser, served only on your machine
+- **Window** — `vela`
+- **Terminal** — `vela --term`, sound through mpv
 
-Works on Arch Linux and Debian. Saved stations live in `~/.config/vela/library.json`, shared by both.
+Saved stations live in `~/.config/vela/library.json`.
 
 ## Install
 
@@ -14,7 +14,7 @@ chmod +x install.sh
 ./install.sh
 ```
 
-The script installs `python3` and `mpv` with pacman or apt, then puts `vela` in `~/.local/bin`.
+The script installs `python3`, `mpv`, and PySide6 with pacman or apt, then puts `vela` in `~/.local/bin`.
 
 If a new terminal cannot find `vela`, add this to your shell profile:
 
@@ -25,11 +25,13 @@ export PATH="$HOME/.local/bin:$PATH"
 ## Use
 
 ```sh
-vela          # terminal
-vela --desk   # desktop
+vela
+vela --term
 ```
 
 Menu entries are **Vela** and **Vela Terminal**.
+
+The longer manual is `docs/linux.md` in the source repository.
 
 ### Terminal keys
 
@@ -50,8 +52,6 @@ Menu entries are **Vela** and **Vela Terminal**.
 | 1 | Cycle Dial, Saved, Mine |
 | q | Quit |
 
-Click a row if your terminal sends mouse events.
+Output, balance, and tone are applied by mpv and remembered in the library file. `o` walks the devices mpv can see, including PipeWire and Pulse sinks.
 
-Stations come from the public [Radio Browser](https://www.radio-browser.info/) directory. Streams that are only available over plain http still play here. A secure browser sometimes cannot play those.
-
-Output, balance, and tone are applied by mpv and remembered in the library file. `o` walks the devices mpv can see, including PipeWire and Pulse sinks. `[` and `]` move the balance. `e` cycles flat, voice, night, and bass.
+Stations come from the public [Radio Browser](https://www.radio-browser.info/) directory. Streams that are only available over plain http still play here.

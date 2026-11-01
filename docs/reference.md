@@ -1,202 +1,73 @@
 # Vela — reference
 
-Full behavior of the browser app and the Linux player.
+Vela is a Linux application. The window is Qt (PySide6). The terminal is curses. Both play through mpv and store the library in `~/.config/vela/library.json`.
 
-## What it is
+## Programs
 
-Vela plays live internet radio. It does not store shows, build a library of files, or sign you in.
-
-There are three lists:
-
-| List | Contents |
+| Command | What opens |
 | --- | --- |
-| Dial | Results from the station directory |
-| Saved | Stations you starred |
-| Mine | Streams you added by address |
+| `vela` | The window |
+| `vela --term` | The terminal |
+| `vela --desk` | Not used. Older installs may still pass it; the current launcher ignores unknown flags and opens the window. |
 
-A station you add is also starred, so it shows under both Mine and Saved.
+`--desk` is not a browser. There is no local web server in the package.
+
+## Files
+
+| Path | Role |
+| --- | --- |
+| `linux/vela/__main__.py` | Chooses window or terminal |
+| `linux/vela/gui.py` | The Qt window |
+| `linux/vela/tui.py` | The curses terminal |
+| `linux/vela/player.py` | mpv, its IPC socket, devices, balance, tone |
+| `linux/vela/radio.py` | Radio Browser search |
+| `linux/vela/library.py` | `~/.config/vela/library.json` |
+| `linux/install.sh` | pacman or apt, then `~/.local` |
 
 ## Directory
 
-Search goes to the public Radio Browser API. Vela tries `de1`, then `de2`, then `fi1` of `api.radio-browser.info`, with a Vela user agent. Broken stations are hidden. Results are ordered by votes, up to 40, and duplicates are dropped.
-
-Search fields:
+Search uses the public Radio Browser API. Vela tries `de1`, then `de2`, then `fi1`, with a Vela user agent. Broken stations are hidden. Results are ordered by votes, up to 40.
 
 | Field | Sent as |
 | --- | --- |
 | Search stations | `name` |
-| Place | `country` |
-| Genre chip or `:tag` | `tag` |
+| Country | `country` |
+| Genre | `tag` |
 
-Name and place wait briefly before a new request, so typing does not hit the directory on every letter. Choosing a genre searches immediately and returns you to Dial.
+The stream address prefers `https://`. An `http://` address is kept when that is all the directory has. mpv tries the `https://` form first, then the original.
 
-The stream address prefers an `https://` URL from the directory. If the catalog only has `http://`, that address is kept.
+## Playback
 
-Vela does not count a “click” back to Radio Browser. Playback uses the URL from search.
+One mpv process, started with `--no-video` and a JSON IPC socket in the temp directory. Pause, volume, mute, and the audio filters go through that socket. Changing the output device restarts mpv so the new sink is used from the first sample.
 
-## Audio route
+The window does not route audio through Qt. Qt draws the controls. mpv owns the sound.
 
-The browser and the Linux player do not route sound the same way.
+## Route
 
-In the browser, Vela can:
+| Control | Window | Terminal | Effect |
+| --- | --- | --- | --- |
+| Output | Output menu | `o` | `mpv --audio-device`. `auto` is the system default. |
+| Balance | Slider | `[` `]` | ffmpeg `stereotools`, steps of 0.2 in the terminal. |
+| Tone | Flat, voice, night, bass | `e` | Voice is a high-pass and a little treble. Night pulls bass and treble down. Bass lifts the low end. |
 
-- Send the `<audio>` element to a chosen output with `setSinkId`, when the browser allows it. Chrome and Edge open a device picker. A browser without that API stays on the system output. The choice is remembered in `localStorage`.
-- Crossfade between two audio elements. Off is a cut. Short is 0.6 seconds. Long is 1.6 seconds. The station you are leaving keeps playing until the new one has started, then the levels move in opposite directions. If the new station never starts, both stop.
+The filter string is an allow-list. The device id has to match the characters mpv prints. Both are stored under `route` in the library file. A volume change does not clear the route.
 
-Vela does not run the stream through the Web Audio graph. Most stations omit the CORS headers that graph would need, and without them the graph plays silence. Balance and equalization therefore stay out of the browser.
+Tone and balance need an mpv build with those ffmpeg filters. If a tone will not open a stream, set it back to flat.
 
-In the Linux terminal, mpv owns the stream:
+## Library
 
-| Control | Key | What it changes |
-| --- | --- | --- |
-| Output | o | Cycles `mpv --audio-device=help`. `auto` is the system default. Changing output restarts the stream. |
-| Balance | [ ] | Steps stereotools balance by 0.2, from full left to full right. |
-| Tone | e | Flat, voice (high-pass and a little treble), night (less bass and treble), or bass. |
+Saved stations and custom streams, up to 200 each. A custom stream must be `http://` or `https://`. The file is replaced atomically. The window and the terminal share it, including when both are used at different times. They do not sync while both are open.
 
-The filter string is an allow-list, not free text. The device id has to match the characters mpv prints. Both are stored in `~/.config/vela/library.json` under `route`, and the next `vela` starts with them. Volume saves do not wipe the route.
+## Keys
 
-Tone and balance are ffmpeg filters (`bass`, `treble`, `highpass`, `stereotools`). A build of mpv without those filters will ignore them or fail to open the stream; set the tone back to flat with `e`.
+The window ignores letter keys while a text field is focused, except Escape, which leaves the field.
 
-The Linux desk page still plays in the browser, so it has the browser’s limits. Output, balance, and tone in this section are the `vela` terminal.
+The terminal reads a line for `/`, `:place`, `:tag`, and `:add`.
 
-## Playback in the browser
+## Install packages
 
-One audio element is shared by Desk and Terminal.
+Arch: `python`, `mpv`, `pyside6`.
 
-On play, Vela tries the address as `https://` first. On an ordinary `http://` page it then tries the original `http://` URL. On an `https://` page it does not fall back to `http://`, because the browser would block it. The message in that case says the Linux app can still play the station.
+Debian: `python3`, `mpv`, `python3-pyside6.qtwidgets`, `python3-pyside6.qtgui`, `python3-pyside6.qtcore`.
 
-A station that does not start within 10 seconds is marked off air. Switching station cancels the attempt in progress. Pausing during “tuning” cancels it too.
-
-The clock next to the transport is how long you have been playing this station, not a position in a file. Live streams do not have a meaningful position.
-
-Volume is 0–100 in the interface and 0–1 on the audio element. Mute keeps your level and sends silence. Moving the slider above zero unmutes.
-
-## Sleep
-
-The header button cycles 15, 30, 45, 60, 90 minutes, then off. The countdown is from the moment you set it. At zero, playback pauses, the timer clears, and the stage says the dial rested. Starting a station clears that note. Sleep is not remembered after you close the tab.
-
-## Keyboard
-
-Handled on the window, ignored while Ctrl, Alt, or a meta key is held, and ignored while a text field is focused (except Escape, which blurs the field and closes dialogs).
-
-| Key | Action |
-| --- | --- |
-| Space | Pause, or play the highlight if nothing is loaded |
-| Enter | Play the highlight |
-| J, Arrow Down | Highlight moves down, and stops at the end |
-| K, Arrow Up | Highlight moves up, and stops at the start |
-| N / P | Play the next or previous station in the visible list |
-| F | Star or unstar the highlight |
-| M | Mute |
-| S | Cycle sleep |
-| A | Open Add |
-| / | Focus search (Desk) or the command line (Terminal) |
-| \ | Toggle Desk and Terminal |
-| + or = | Volume up 5 points |
-| − | Volume down 5 points |
-| ? | Key card |
-| Escape | Close the card or the add form |
-
-Terminal commands are the Enter key inside the command field, not the global keys above.
-
-| Command | Effect |
-| --- | --- |
-| text, or `/text` | Set the search and show Dial |
-| `:place France` | Set the country and show Dial. Empty clears it |
-| `:tag jazz` | Set the tag and show Dial. Empty clears it |
-| `:add Name \| https://…` | Add a stream, show Mine, and play it |
-| `:add Name https://…` | Same, when the address is the last word |
-| `:help`, `help`, `?` | Open the key card |
-
-Add fails closed: the address must be a real `http:` or `https:` URL. `javascript:` and other schemes are rejected.
-
-## What the browser stores
-
-`localStorage` key `vela`, via Zustand persist. Hydration waits until after the first paint so the server render and the first client render match.
-
-Stored:
-
-- mode (`desk` or `terminal`)
-- volume and mute
-- output device id and label
-- crossfade (off, short, or long)
-- favorites (up to 200)
-- custom streams (up to 200)
-
-Not stored: the current station, sleep, or the search you had typed. The page does not autoplay.
-
-Removing a custom stream also removes it from Saved.
-
-## Desk
-
-Wide screens: a scrolling list and a stage. Narrow screens: the list first, then a compact now-playing bar with play and volume.
-
-Each row shows a two-letter monogram, the name, a short place and up to two tags, and the bitrate when the directory sent one. Country names that are the long official forms are shortened (`United States`, `United Kingdom`). If a name is still very long, the country code is shown instead.
-
-The stage states are Quiet, Tuning, On air, Paused, Off air, and Rested.
-
-## Terminal
-
-Same data and the same player. The highlight is a `>` on the selected row. Genre names and Dial / Saved / Mine are buttons, so a mouse or a phone still works.
-
-## Linux player
-
-Python 3, standard library only, plus mpv for sound. No pip packages.
-
-| File | Role |
-| --- | --- |
-| `linux/vela/__main__.py` | `vela` or `vela --desk` |
-| `linux/vela/radio.py` | Directory client, same servers and the same field mapping |
-| `linux/vela/library.py` | `~/.config/vela/library.json`, written atomically |
-| `linux/vela/player.py` | mpv, with a JSON IPC socket for pause, mute, and volume |
-| `linux/vela/tui.py` | Curses interface |
-| `linux/vela/desk.py` | Local server on `127.0.0.1` and a random port |
-| `linux/vela/desk_web/` | The desktop page |
-
-`install.sh` detects pacman or apt, installs `python3` and `mpv` if they are missing, and installs under `~/.local` (override with `PREFIX`).
-
-The desktop page talks only to that local server: `/api/search` and `/api/library`. It is not an open proxy. Library posts are capped at 256 KB and checked before they are saved.
-
-mpv is started with `--no-video`. An `http://` URL is tried as `https://` first, then as `http://`. If mpv is missing, the terminal says so instead of failing silently.
-
-Sleep, favorites, and custom streams behave like the browser app. The `1` key cycles Dial, Saved, and Mine. Mouse clicks play a row when the list is not scrolled.
-
-## Web app layout
-
-TanStack Start, React, and Tailwind CSS 4.
-
-| Path | Role |
-| --- | --- |
-| `src/routes/index.tsx` | The page |
-| `src/components/vela/app.tsx` | Header, search, keyboard, mode |
-| `src/components/vela/desk.tsx` | Desk layout |
-| `src/components/vela/terminal.tsx` | Terminal layout |
-| `src/components/vela/engine.tsx` | Audio, output device, crossfade |
-| `src/components/vela/route.tsx` | Route panel |
-| `src/components/vela/rows.tsx` | Station rows |
-| `src/components/vela/overlays.tsx` | Add form and key card |
-| `src/lib/radio.functions.ts` | Server-side directory proxy |
-| `src/lib/stations.ts` | Types, genres, formatting |
-| `src/lib/store.ts` | Saved state |
-| `src/styles.css` | Color and type |
-
-The palette is a warm charcoal with one amber accent. Type is Outfit for the desk and IBM Plex Mono for the terminal, metadata, and the command line.
-
-## Develop
-
-```sh
-npm install
-npm run dev        # local dev server
-npm run build      # production build
-npm run typecheck
-```
-
-The directory proxy runs on the server so the browser does not have to send a custom user agent and so a failed Radio Browser host can be retried.
-
-## Limits
-
-- 40 stations per search.
-- 200 saved stations and 200 custom streams.
-- No accounts, no sync between browsers, and no sync between the browser and the Linux library. They are separate on purpose: the browser uses `localStorage`, Linux uses `~/.config/vela/library.json`.
-- Playback depends on the station. A listing can be up and the stream can still be down.
-- Secure pages cannot play a stream that is only available as `http://`.
+If the distro packages are not available, the installer uses `pip install --user PySide6-Essentials`.

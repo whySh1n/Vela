@@ -1,48 +1,40 @@
 # Vela
 
-Vela is a late-night internet radio. One dial, two ways to listen: a visual **desk** and a keyboard **terminal**. Search the public station directory, save the ones you keep, or add a stream of your own.
+Vela is a Linux radio player for Arch and Debian. One library, two programs:
 
-No account. Nothing you save leaves the machine you are using.
+- **Window** — `vela` opens a dark player. Search, save, add a stream, pick the output, set the balance and the tone.
+- **Terminal** — `vela --term` is the same stations from the keyboard. Sound is mpv in both.
 
-## Listen
+It is not a website. The page in this repository is only a picture of the window and the download.
 
-| | Desk | Terminal |
-| --- | --- | --- |
-| Where | The browser | The same app, or `vela` on Linux |
-| How | Search, tap, play | `j` `k`, Enter, `/` to search |
-| Sound | The browser | The browser, or mpv on Linux |
+## Install
 
-In the browser, **Desk** and **Terminal** in the header switch modes. `\` does the same when you are not typing.
+```sh
+unzip vela-linux.zip
+cd vela-linux
+chmod +x install.sh
+./install.sh
+```
 
-On Arch Linux and Debian, the `linux/` folder is a small player you install later. The terminal uses mpv. The desktop opens a local page. They share one library.
+The script installs `python3`, `mpv`, and PySide6 with pacman or apt, then puts `vela` on your `PATH`.
+
+```sh
+vela
+vela --term
+```
+
+If a new terminal cannot find the command, add `$HOME/.local/bin` to your `PATH`.
 
 ## Manuals
 
-- [Short manual](docs/manual.md) — using Vela in the browser
-- [Linux manual](docs/linux.md) — install, keys, and your own streams
-- [Reference](docs/reference.md) — full behavior, storage, and how the app is built
-
-## Run it yourself
-
-Node.js 22 or newer.
-
-```sh
-npm install
-npm run dev
-```
-
-Then open the address the dev server prints.
-
-```sh
-npm run build
-npm run typecheck
-```
+- [Window and terminal](docs/linux.md)
+- [Reference](docs/reference.md)
 
 ## Stations
 
-Listings come from the public [Radio Browser](https://www.radio-browser.info/) directory. Vela does not host the audio. Playback goes straight from the station’s stream to your browser or to mpv.
+Listings come from the public [Radio Browser](https://www.radio-browser.info/) directory. Vela does not host the audio. mpv plays the stream, including stations that only offer `http://`.
 
-Some stations only publish an `http://` stream. A secure page tries the `https://` version of that address and skips the station if that fails. The Linux player can still open the plain stream.
+Saved stations live in `~/.config/vela/library.json`.
 
 ## License
 
