@@ -4,25 +4,13 @@ A radio player for Arch Linux and Debian. The window and the terminal share one 
 
 ## Install
 
-```sh
-chmod +x install.sh
-./install.sh
-```
-
-The script installs `python3`, `mpv`, and PySide6 with pacman or apt, then copies Vela to `~/.local`.
+Paste this into a terminal on Arch or Debian. It asks for your password once.
 
 ```sh
-vela          # window
-vela --term   # terminal
+curl -fsSL https://raw.githubusercontent.com/whySh1n/Vela/main/linux/install.sh | sh
 ```
 
-If the command is not found:
-
-```sh
-export PATH="$HOME/.local/bin:$PATH"
-```
-
-The application menu has **Vela** and **Vela Terminal**.
+Open **Vela** from your applications. A new terminal can also run `vela`, or `vela --term` for the keyboard player.
 
 ## Window
 

@@ -9,18 +9,13 @@ Saved stations live in `~/.config/vela/library.json`.
 
 ## Install
 
-```sh
-chmod +x install.sh
-./install.sh
-```
-
-The script installs `python3`, `mpv`, and PySide6 with pacman or apt, then puts `vela` in `~/.local/bin`.
-
-If a new terminal cannot find `vela`, add this to your shell profile:
+Paste this into a terminal. It asks for your password once.
 
 ```sh
-export PATH="$HOME/.local/bin:$PATH"
+curl -fsSL https://raw.githubusercontent.com/whySh1n/Vela/main/linux/install.sh | sh
 ```
+
+Open **Vela** from your applications. A new terminal can also run `vela`.
 
 ## Use
 

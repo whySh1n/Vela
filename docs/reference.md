@@ -22,7 +22,7 @@ Vela is a Linux application. The window is Qt (PySide6). The terminal is curses.
 | `linux/vela/player.py` | mpv, its IPC socket, devices, balance, tone |
 | `linux/vela/radio.py` | Radio Browser search |
 | `linux/vela/library.py` | `~/.config/vela/library.json` |
-| `linux/install.sh` | pacman or apt, then `~/.local` |
+| `linux/install.sh` | One command. Installs mpv and PySide6, then copies Vela to `~/.local` and adds that `bin` to the shell path. |
 
 ## Directory
 
