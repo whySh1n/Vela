@@ -444,12 +444,12 @@ def main(argv=None):
             # QListWidget.clear() drops the items and leaves their widgets
             # parented to the viewport. Those leftovers stay Python-owned, and
             # PySide destroys them again while the application is shutting down.
-            viewport = self.list.viewport()
+            widgets = [self.list.itemWidget(self.list.item(index)) for index in range(self.list.count())]
             self.list.clear()
-            for child in list(viewport.children()):
-                if isinstance(child, QWidget) and shiboken6.isValid(child):
-                    child.setParent(None)
-                    shiboken6.delete(child)
+            for widget in widgets:
+                if widget is not None and shiboken6.isValid(widget):
+                    widget.setParent(None)
+                    shiboken6.delete(widget)
 
         def shutdown(self):
             if self._closing:
@@ -471,6 +471,8 @@ def main(argv=None):
             self.list.blockSignals(True)
             self._discard_rows()
             saved = self.saved_ids()
+            if rows:
+                self.selected = max(0, min(self.selected, len(rows) - 1))
             for index, station in enumerate(rows):
                 item = QListWidgetItem()
                 item.setData(Qt.UserRole, station["id"])
@@ -478,7 +480,6 @@ def main(argv=None):
                 self.list.addItem(item)
                 self.list.setItemWidget(item, self._row(station, index, station["id"] in saved))
             if rows:
-                self.selected = max(0, min(self.selected, len(rows) - 1))
                 self.list.setCurrentRow(self.selected)
             self.list.blockSignals(False)
             self.scope_buttons["saved"].setText(f"Saved  {len(self.lib['favorites']) or ''}".strip())
@@ -707,8 +708,12 @@ def main(argv=None):
 
             def work():
                 with self.lock:
+                    if self._closing or token != self.play_token:
+                        return
                     self.player.set_device(device)
-                self.bridge.played.emit(token, "")
+                    if self._closing or token != self.play_token:
+                        return
+                    self.bridge.played.emit(token, "")
 
             self.player.device = device
             self._remember_route()
