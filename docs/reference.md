@@ -22,6 +22,7 @@ Vela is a Linux application. The window is Qt (PySide6). The terminal is curses.
 | `linux/vela/player.py` | mpv, its IPC socket, devices, balance, tone |
 | `linux/vela/radio.py` | Radio Browser search |
 | `linux/vela/library.py` | `~/.config/vela/library.json` |
+| `linux/make_zip.py` | Rebuilds `public/vela-linux.zip`, the download on the web page. `linux/zip_test.py` fails when it is stale. |
 | `linux/install.sh` | One command. Installs mpv and PySide6, then copies Vela to `~/.local` and adds that `bin` to the shell path. |
 
 ## Directory
