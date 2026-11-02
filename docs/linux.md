@@ -14,9 +14,9 @@ Open **Vela** from your applications. A new terminal can also run `vela`, or `ve
 
 ## Window
 
-The list is the directory. Type in **Search stations**, or a **Country**, or pick a genre. **Dial** is the directory, **Saved** is what you starred, **Mine** is a stream you added.
+The list fills the window. Type in **Search stations**, or a **Country**, or pick a genre. **Dial**, **Saved**, and **Mine** sit in the top bar. **Dial** is the directory, **Saved** is what you starred, **Mine** is a stream you added.
 
-Click a row to play it. The round button plays and pauses. **Prev** and **Next** move through the list you are looking at. The star saves a station.
+Click a row to play it. The round button plays and pauses. **Prev** and **Next** move through the list you are looking at. The star saves a station. What is playing, the volume, and **Sleep** sit on the bar along the bottom, with **Output**, **Balance**, and **Tone**. When the station sends it, that bar also names the artist and the song.
 
 **Add** asks for a name and an `http://` or `https://` address.
 
@@ -39,6 +39,8 @@ Click a row to play it. The round button plays and pauses. **Prev** and **Next**
 | Ctrl+Q | Quit |
 
 ## Terminal
+
+The line under the station names the artist and the song when the station sends them.
 
 | Key | Action |
 | --- | --- |

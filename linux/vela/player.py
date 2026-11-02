@@ -94,6 +94,101 @@ def _safe_device(device):
     return device
 
 
+_SPLIT = re.compile(r"\s+[-–—|]\s+")
+_JUNK = {
+    "",
+    "unknown",
+    "unknown artist",
+    "unknown title",
+    "n/a",
+    "na",
+    "null",
+    "none",
+    "undefined",
+    "-",
+    "–",
+    "—",
+    "no title",
+    "not available",
+    "stream title",
+    "unspecified",
+}
+_CODECS = {"mp3", "aac", "opus", "flac", "vorbis", "ogg", "mpeg", "mp2"}
+
+
+def _clean_tag(value):
+    if not isinstance(value, str):
+        return ""
+    text = " ".join(value.replace("\x00", " ").split())
+    if len(text) >= 2 and text[0] == text[-1] and text[0] in ("'", '"'):
+        text = text[1:-1].strip()
+    text = text.strip(" -–—|")
+    if len(text) > 160:
+        text = text[:160].rstrip()
+    if text.casefold() in _JUNK or text.lower().startswith(("http://", "https://")):
+        return ""
+    return text
+
+
+def _split_title(text):
+    parts = _SPLIT.split(text, maxsplit=1)
+    if len(parts) == 2:
+        left, right = _clean_tag(parts[0]), _clean_tag(parts[1])
+        if left and right:
+            return left, right
+    return "", _clean_tag(text)
+
+
+def _strip_artist(artist, title):
+    folded = title.casefold()
+    for sep in (" - ", " – ", " — ", " | "):
+        prefix = (artist + sep).casefold()
+        if folded.startswith(prefix) and len(title) >= len(prefix):
+            return _clean_tag(title[len(prefix) :])
+    return title
+
+
+def parse_track(metadata, media_title="", station=""):
+    """Artist and song from an mpv metadata dict. Empty strings when the stream did not say."""
+    meta = {}
+    if isinstance(metadata, dict):
+        for key, value in metadata.items():
+            if isinstance(key, str):
+                meta[key.strip().lower()] = value
+    artist = _clean_tag(meta.get("artist") or meta.get("album_artist") or "")
+    title = _clean_tag(meta.get("title") or "")
+    icy = _clean_tag(meta.get("icy-title") or meta.get("streamtitle") or "")
+    if not title and icy:
+        left, right = _split_title(icy)
+        if left and not artist:
+            artist = left
+        title = right
+    if title and not artist:
+        left, right = _split_title(title)
+        if left:
+            artist, title = left, right
+    if artist and title:
+        title = _strip_artist(artist, title)
+    if not artist and not title:
+        media = _clean_tag(media_title)
+        icy_name = _clean_tag(meta.get("icy-name") or "")
+        if media and not (icy_name and media.casefold() == icy_name.casefold()):
+            if media.casefold() not in _CODECS:
+                artist, title = _split_title(media)
+    station_name = _clean_tag(station)
+    icy_name = _clean_tag(meta.get("icy-name") or "")
+    for name in (station_name, icy_name):
+        if not name:
+            continue
+        if title and title.casefold() == name.casefold():
+            title = ""
+        if artist and artist.casefold() == name.casefold():
+            artist = ""
+    if artist and title and artist.casefold() == title.casefold():
+        artist = ""
+    return artist, title
+
+
 def _filter(balance, eq):
     parts = []
     if abs(balance) >= 0.05:
@@ -149,6 +244,9 @@ class Player:
         self._request = 0
         self._play_gen = 0
         self._cancelled_gen = -1
+        self._track_key = None
+        self._track_at = 0.0
+        self._track_value = ("", "")
 
     def available(self):
         return shutil.which("mpv") is not None
@@ -179,6 +277,7 @@ class Player:
         return self._cancelled_gen == gen
 
     def play(self, url, allow_private=None):
+        self._forget_track()
         self._play_gen += 1
         gen = self._play_gen
         if allow_private is None:
@@ -247,6 +346,7 @@ class Player:
         )
 
     def stop(self):
+        self._forget_track()
         proc = self.proc
         self.proc = None
         if proc and proc.poll() is None:
@@ -263,6 +363,31 @@ class Player:
 
     def alive(self):
         return self.proc is not None and self.proc.poll() is None
+
+    def _forget_track(self):
+        self._track_key = None
+        self._track_at = 0.0
+        self._track_value = ("", "")
+
+    def track(self, station=""):
+        """Who is playing, and the song, when the stream sends them."""
+        if not self.alive():
+            return "", ""
+        now = time.monotonic()
+        key = station or ""
+        if self._track_key == key and now - self._track_at < 0.8:
+            return self._track_value
+        reply = self._reply(["get_property", "metadata"])
+        metadata = reply.get("data") if reply and reply.get("error") == "success" else None
+        media = ""
+        title_reply = self._reply(["get_property", "media-title"])
+        if title_reply and title_reply.get("error") == "success" and isinstance(title_reply.get("data"), str):
+            media = title_reply["data"]
+        value = parse_track(metadata, media, key)
+        self._track_key = key
+        self._track_at = now
+        self._track_value = value
+        return value
 
     def _ready(self, timeout, gen=None):
         """True once mpv reports an audio codec; False if it exits, times out, or is cancelled."""

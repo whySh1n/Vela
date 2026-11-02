@@ -28,56 +28,77 @@ EQS = (("flat", "Flat"), ("voice", "Voice"), ("night", "Night"), ("bass", "Bass"
 SLEEP = (0, 15, 30, 45, 60, 90)
 
 QSS = """
-QMainWindow, QWidget#app { background: #0c0c0c; color: #f5f2ec; }
-QWidget#stage { background: #111111; }
-QLabel, QListWidget { background: transparent; color: #f5f2ec; }
+QMainWindow, QWidget#app { background: #0c0c0c; color: #f4f1ea; }
+QWidget#stage { background: #101010; }
+QLabel, QListWidget { background: transparent; color: #f4f1ea; }
+QLabel#word { font-size: 16px; font-weight: 650; }
+QLabel#status { color: #8d877f; font-size: 13px; }
+QLabel#status[live="true"] { color: #e8a04a; }
 QFrame#line { background: #242424; max-height: 1px; min-height: 1px; border: none; }
 QLineEdit {
-  background: transparent; color: #f5f2ec; border: none; padding: 0 16px;
-  selection-background-color: #2c2c2c; selection-color: #f5f2ec;
+  background: transparent; color: #f4f1ea; border: none; padding: 0 14px;
+  selection-background-color: #2c2c2c; selection-color: #f4f1ea;
 }
-QWidget#finder { background: #171717; border-radius: 22px; min-height: 44px; }
+QWidget#finder {
+  background: #141414; border: 1px solid #242424; border-radius: 12px; min-height: 42px;
+}
 QFrame#finderRule { background: #2a2a2a; border: none; max-width: 1px; min-width: 1px; }
 QListWidget { border: none; outline: none; }
 QListWidget::item { border: none; background: transparent; }
 QListWidget::item:selected { background: transparent; }
 QPushButton {
-  background: transparent; color: #8e8880; border: none;
-  border-radius: 16px; padding: 8px 12px;
+  background: transparent; color: #8d877f; border: none;
+  border-radius: 9px; padding: 6px 12px;
 }
-QPushButton:hover { color: #f5f2ec; background: #1a1a1a; }
-QPushButton#ghost { padding: 8px 12px; }
-QPushButton#ghost:checked { color: #f5f2ec; background: transparent; }
+QPushButton:hover { color: #f4f1ea; background: #1a1a1a; }
+QPushButton#add { color: #f4f1ea; padding: 6px 14px; }
+QPushButton#add:hover { background: #1a1a1a; }
+QWidget#segments { background: #171717; border-radius: 12px; }
+QPushButton#ghost {
+  padding: 6px 14px; border-radius: 8px; color: #8d877f; background: transparent;
+}
+QPushButton#ghost:hover { color: #f4f1ea; background: transparent; }
+QPushButton#ghost:checked { color: #141414; background: #f4f1ea; }
+QPushButton#ghost:checked:hover { color: #141414; background: #ffffff; }
+QPushButton#transport { color: #cfc8be; padding: 6px 10px; border-radius: 8px; }
+QPushButton#transport:hover { color: #f4f1ea; background: #1c1c1c; }
 QPushButton#play {
-  background: #f5f2ec; color: #111111; border: none; border-radius: 24px;
-  min-width: 48px; max-width: 48px; min-height: 48px; max-height: 48px;
-  font-size: 14px; padding: 0;
+  background: #f4f1ea; color: #141414; border: none; border-radius: 22px;
+  min-width: 44px; max-width: 44px; min-height: 44px; max-height: 44px;
+  font-size: 13px; padding: 0;
 }
-QPushButton#play:hover { background: #ffffff; color: #111111; }
-QPushButton#chip { background: transparent; color: #8e8880; border: none; border-radius: 14px; padding: 6px 10px; }
-QPushButton#chip:hover { color: #f5f2ec; background: #1a1a1a; }
-QPushButton#chip:checked { color: #111111; background: #f5f2ec; }
+QPushButton#play:hover { background: #ffffff; color: #141414; }
+QPushButton#chip {
+  background: transparent; color: #8d877f; border: none; border-radius: 8px; padding: 4px 10px;
+}
+QPushButton#chip:hover { color: #f4f1ea; background: #1a1a1a; }
+QPushButton#chip:checked { color: #141414; background: #f4f1ea; }
+QPushButton#chip:checked:hover { color: #141414; background: #ffffff; }
 QComboBox {
-  background: #171717; border: none; border-radius: 12px;
-  padding: 8px 12px; min-height: 20px; color: #f5f2ec;
+  background: #171717; border: none; border-radius: 8px;
+  padding: 5px 10px; min-height: 18px; color: #f4f1ea;
 }
-QComboBox::drop-down { border: none; width: 22px; }
+QComboBox::drop-down { border: none; width: 18px; }
 QComboBox QAbstractItemView {
-  background: #171717; color: #f5f2ec; border: none;
+  background: #171717; color: #f4f1ea; border: none;
   selection-background-color: #242424; outline: none;
 }
 QSlider::groove:horizontal { height: 2px; background: #2a2a2a; border: none; }
-QSlider::sub-page:horizontal { background: #f5f2ec; }
+QSlider::sub-page:horizontal { background: #f4f1ea; }
 QSlider::handle:horizontal {
-  background: #f5f2ec; border: none; width: 10px; height: 10px; margin: -4px 0; border-radius: 5px;
+  background: #f4f1ea; border: none; width: 12px; height: 12px; margin: -5px 0; border-radius: 6px;
 }
-QLabel#eyebrow { color: #8e8880; font-size: 11px; letter-spacing: 1px; }
-QLabel#title { font-size: 28px; font-weight: 500; }
-QLabel#muted, QLabel#meta { color: #8e8880; }
+QLabel#eyebrow { color: #8d877f; font-size: 11px; letter-spacing: 1.2px; }
+QLabel#eyebrow[live="true"] { color: #e8a04a; }
+QLabel#muted, QLabel#meta { color: #8d877f; font-size: 12px; }
+QLabel#count { color: #6a655f; font-size: 10px; letter-spacing: 1.6px; }
+QLabel#err { color: #e8a04a; font-size: 12px; }
 QLabel#mark {
-  background: #171717; color: #f5f2ec; border: none; border-radius: 36px; font-size: 22px;
+  background: #1a1a1a; color: #f4f1ea; border: none; border-radius: 16px;
+  font-size: 16px; font-weight: 650;
 }
-QScrollBar:vertical { background: transparent; width: 8px; margin: 0; }
+QLabel#mark[live="true"] { background: #f4f1ea; color: #141414; }
+QScrollBar:vertical { background: transparent; width: 8px; margin: 4px 0; }
 QScrollBar::handle:vertical { background: #2a2a2a; border-radius: 4px; min-height: 24px; }
 QScrollBar::add-line, QScrollBar::sub-line, QScrollBar::add-page, QScrollBar::sub-page, QScrollBar::corner {
   background: transparent; border: none; width: 0; height: 0;
@@ -129,7 +150,7 @@ def main(argv=None):
     argv = list(sys.argv if argv is None else argv)
     try:
         from PySide6.QtCore import QEvent, Qt, QTimer, QObject, Signal, QSize
-        from PySide6.QtGui import QColor, QFont, QKeyEvent, QPalette
+        from PySide6.QtGui import QColor, QFont, QFontMetrics, QKeyEvent, QPainter, QPalette
         from PySide6.QtWidgets import (
             QApplication,
             QButtonGroup,
@@ -143,6 +164,7 @@ def main(argv=None):
             QListWidgetItem,
             QMainWindow,
             QPushButton,
+            QSizePolicy,
             QSlider,
             QVBoxLayout,
             QWidget,
@@ -185,12 +207,31 @@ def main(argv=None):
         button.setFocusPolicy(Qt.NoFocus)
         return button
 
+    class ElideLabel(QLabel):
+        def __init__(self, text, color, size=15, weight=QFont.Weight.Medium):
+            super().__init__(text)
+            self._color = QColor(color)
+            font = QFont(self.font())
+            font.setPixelSize(size)
+            font.setWeight(weight)
+            self.setFont(font)
+            self.setMinimumWidth(0)
+            self.setMinimumHeight(size + 6)
+            self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
+
+        def paintEvent(self, _event):
+            painter = QPainter(self)
+            painter.setPen(self._color)
+            painter.setFont(self.font())
+            text = QFontMetrics(self.font()).elidedText(self.text(), Qt.ElideRight, max(0, self.width()))
+            painter.drawText(self.rect(), int(Qt.AlignVCenter | Qt.AlignLeft), text)
+
     class Window(QMainWindow):
         def __init__(self):
             super().__init__()
             self.setWindowTitle("Vela")
-            self.resize(1120, 720)
-            self.setMinimumSize(860, 560)
+            self.resize(1200, 760)
+            self.setMinimumSize(980, 620)
             self.lib = library.load()
             self.player = player.Player(self.lib.get("volume", 82), self.lib.get("route"))
             self.lock = threading.Lock()
@@ -212,6 +253,8 @@ def main(argv=None):
             self.play_token = 0
             self.started = None
             self.sleep_at = None
+            self.track_artist = ""
+            self.track_title = ""
             self.outputs = [{"id": "auto", "label": "System default"}]
             # Sliders fire on every step; write the library once they settle.
             self.save_timer = QTimer(self)
@@ -263,83 +306,33 @@ def main(argv=None):
 
             header = QWidget()
             bar = QHBoxLayout(header)
-            bar.setContentsMargins(22, 14, 16, 14)
-            titles = QHBoxLayout()
-            titles.setSpacing(10)
+            bar.setContentsMargins(22, 14, 18, 12)
+            bar.setSpacing(16)
+            brand = QWidget()
+            brand_row = QHBoxLayout(brand)
+            brand_row.setContentsMargins(0, 0, 0, 0)
+            brand_row.setSpacing(10)
             name = QLabel("Vela")
-            name.setStyleSheet("font-size:16px;font-weight:500;")
+            name.setObjectName("word")
             self.header_status = QLabel("Quiet")
-            self.header_status.setObjectName("muted")
-            titles.addWidget(name)
-            titles.addWidget(self.header_status)
-            bar.addLayout(titles)
-            bar.addStretch(1)
-            self.sleep_btn = quiet(QPushButton("Sleep"))
-            self.sleep_btn.clicked.connect(self.cycle_sleep)
-            self.mute_btn = quiet(QPushButton("Mute"))
-            self.mute_btn.clicked.connect(self.toggle_mute)
-            bar.addWidget(self.sleep_btn)
-            bar.addWidget(self.mute_btn)
-            outer.addWidget(header)
-            outer.addWidget(self._rule())
-
-            body = QHBoxLayout()
-            body.setContentsMargins(0, 0, 0, 0)
-            body.setSpacing(0)
-            outer.addLayout(body, 1)
-
-            left = QWidget()
-            left_box = QVBoxLayout(left)
-            left_box.setContentsMargins(20, 16, 12, 12)
-            left_box.setSpacing(10)
-            finder = QWidget()
-            finder.setObjectName("finder")
-            finder.setFixedHeight(44)
-            filters = QHBoxLayout(finder)
-            filters.setContentsMargins(0, 0, 0, 0)
-            filters.setSpacing(0)
-            self.search_box = QLineEdit()
-            self.search_box.setObjectName("finderField")
-            self.search_box.setPlaceholderText("Search stations")
-            self.search_box.textChanged.connect(self.on_query)
-            rule_host = QWidget()
-            rule_host.setFixedWidth(1)
-            rule_box = QVBoxLayout(rule_host)
-            rule_box.setContentsMargins(0, 12, 0, 12)
-            rule_box.setSpacing(0)
-            rule = QFrame()
-            rule.setObjectName("finderRule")
-            rule_box.addWidget(rule)
-            self.country_box = QLineEdit()
-            self.country_box.setObjectName("finderField")
-            self.country_box.setPlaceholderText("Country")
-            self.country_box.setFixedWidth(168)
-            self.country_box.textChanged.connect(self.on_country)
-            filters.addWidget(self.search_box, 1)
-            filters.addWidget(rule_host)
-            filters.addWidget(self.country_box)
-            left_box.addWidget(finder)
-
-            self.genre_group = QButtonGroup(self)
-            self.genre_group.setExclusive(True)
-            for chunk in (GENRES[:6], GENRES[6:]):
-                genre_row = QHBoxLayout()
-                genre_row.setContentsMargins(0, 0, 0, 0)
-                genre_row.setSpacing(2)
-                for genre_id, label in chunk:
-                    button = quiet(QPushButton(label))
-                    button.setObjectName("chip")
-                    button.setFlat(True)
-                    button.setCursor(Qt.PointingHandCursor)
-                    button.setCheckable(True)
-                    button.setChecked(genre_id == "")
-                    button.clicked.connect(lambda _=False, gid=genre_id: self.on_tag(gid))
-                    self.genre_group.addButton(button)
-                    genre_row.addWidget(button)
-                genre_row.addStretch(1)
-                left_box.addLayout(genre_row)
-
-            scopes = QHBoxLayout()
+            self.header_status.setObjectName("status")
+            brand_row.addWidget(name)
+            brand_row.addWidget(self.header_status)
+            brand_row.addStretch(1)
+            actions = QWidget()
+            action_row = QHBoxLayout(actions)
+            action_row.setContentsMargins(0, 0, 0, 0)
+            action_row.addStretch(1)
+            add = quiet(QPushButton("Add"))
+            add.setObjectName("add")
+            add.setCursor(Qt.PointingHandCursor)
+            add.clicked.connect(self.add_dialog)
+            action_row.addWidget(add)
+            segments = QWidget()
+            segments.setObjectName("segments")
+            seg = QHBoxLayout(segments)
+            seg.setContentsMargins(4, 4, 4, 4)
+            seg.setSpacing(2)
             self.scope_group = QButtonGroup(self)
             self.scope_group.setExclusive(True)
             self.scope_buttons = {}
@@ -353,108 +346,232 @@ def main(argv=None):
                 button.clicked.connect(lambda _=False, k=key: self.on_scope(k))
                 self.scope_group.addButton(button)
                 self.scope_buttons[key] = button
-                scopes.addWidget(button)
-            scopes.addStretch(1)
-            add = quiet(QPushButton("Add"))
-            add.clicked.connect(self.add_dialog)
-            scopes.addWidget(add)
-            left_box.addLayout(scopes)
+                seg.addWidget(button)
+            bar.addWidget(brand, 1)
+            bar.addWidget(segments, 0, Qt.AlignCenter)
+            bar.addWidget(actions, 1)
+            outer.addWidget(header)
 
+            filters = QWidget()
+            filters_box = QVBoxLayout(filters)
+            filters_box.setContentsMargins(20, 4, 20, 6)
+            filters_box.setSpacing(8)
+            finder = QWidget()
+            finder.setObjectName("finder")
+            finder.setFixedHeight(42)
+            finder_row = QHBoxLayout(finder)
+            finder_row.setContentsMargins(0, 0, 0, 0)
+            finder_row.setSpacing(0)
+            self.search_box = QLineEdit()
+            self.search_box.setObjectName("finderField")
+            self.search_box.setPlaceholderText("Search stations")
+            self.search_box.textChanged.connect(self.on_query)
+            rule_host = QWidget()
+            rule_host.setFixedWidth(1)
+            rule_box = QVBoxLayout(rule_host)
+            rule_box.setContentsMargins(0, 10, 0, 10)
+            rule_box.setSpacing(0)
+            rule = QFrame()
+            rule.setObjectName("finderRule")
+            rule_box.addWidget(rule)
+            self.country_box = QLineEdit()
+            self.country_box.setObjectName("finderField")
+            self.country_box.setPlaceholderText("Country")
+            self.country_box.setFixedWidth(180)
+            self.country_box.textChanged.connect(self.on_country)
+            finder_row.addWidget(self.search_box, 1)
+            finder_row.addWidget(rule_host)
+            finder_row.addWidget(self.country_box)
+            filters_box.addWidget(finder)
+
+            genre_row = QHBoxLayout()
+            genre_row.setContentsMargins(0, 0, 0, 0)
+            genre_row.setSpacing(2)
+            self.genre_group = QButtonGroup(self)
+            self.genre_group.setExclusive(True)
+            for genre_id, label in GENRES:
+                button = quiet(QPushButton(label))
+                button.setObjectName("chip")
+                button.setFlat(True)
+                button.setCursor(Qt.PointingHandCursor)
+                button.setCheckable(True)
+                button.setChecked(genre_id == "")
+                button.clicked.connect(lambda _=False, gid=genre_id: self.on_tag(gid))
+                self.genre_group.addButton(button)
+                genre_row.addWidget(button)
+            genre_row.addStretch(1)
+            filters_box.addLayout(genre_row)
             self.count = QLabel("DIRECTORY")
-            self.count.setObjectName("muted")
-            self.count.setStyleSheet("color:#6f6a64;font-size:10px;letter-spacing:1.5px;")
-            left_box.addWidget(self.count)
+            self.count.setObjectName("count")
+            filters_box.addWidget(self.count)
+            outer.addWidget(filters)
+
+            list_host = QWidget()
+            list_box = QHBoxLayout(list_host)
+            list_box.setContentsMargins(12, 0, 6, 8)
+            list_box.setSpacing(0)
             self.list = QListWidget()
-            self.list.setSpacing(2)
+            self.list.setSpacing(4)
             self.list.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+            self.list.setFrameShape(QFrame.NoFrame)
             self.list.itemClicked.connect(self.on_click)
             self.list.currentRowChanged.connect(self.on_row)
             self.list.installEventFilter(self)
-            left_box.addWidget(self.list, 1)
-            body.addWidget(left, 1)
+            list_box.addWidget(self.list)
+            outer.addWidget(list_host, 1)
+            self._list_fade = QWidget(list_host)
+            self._list_fade.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+            self._list_fade.setStyleSheet(
+                "background: qlineargradient(x1:0, y1:0, x2:0, y2:1,"
+                " stop:0 rgba(12,12,12,0), stop:0.25 rgba(12,12,12,0), stop:0.72 #0c0c0c, stop:1 #0c0c0c);"
+            )
 
+            outer.addWidget(self._rule())
+            outer.addWidget(self._deck())
+
+        def resizeEvent(self, event):
+            super().resizeEvent(event)
+            if getattr(self, "_list_fade", None) is not None:
+                self._place_list_fade()
+
+        def _place_list_fade(self):
+            host = self._list_fade.parentWidget()
+            if host is None:
+                return
+            height = 36
+            self._list_fade.setGeometry(0, max(0, host.height() - height), host.width(), height)
+            self._list_fade.raise_()
+
+        def _deck(self):
             stage = QWidget()
             stage.setObjectName("stage")
-            stage.setFixedWidth(360)
             side = QVBoxLayout(stage)
-            side.setContentsMargins(28, 32, 28, 24)
+            side.setContentsMargins(20, 14, 20, 16)
             side.setSpacing(12)
-            self.eyebrow = QLabel("Quiet")
-            self.eyebrow.setObjectName("eyebrow")
+
+            top = QHBoxLayout()
+            top.setSpacing(16)
             self.mark = QLabel("·")
             self.mark.setObjectName("mark")
             self.mark.setAlignment(Qt.AlignCenter)
-            self.mark.setFixedSize(72, 72)
-            self.title = QLabel("No station")
+            self.mark.setFixedSize(56, 56)
+            identity = QVBoxLayout()
+            identity.setContentsMargins(0, 0, 0, 0)
+            identity.setSpacing(1)
+            self.eyebrow = QLabel("Quiet")
+            self.eyebrow.setObjectName("eyebrow")
+            self.title = ElideLabel("No station", "#f4f1ea", 20, QFont.Weight.DemiBold)
             self.title.setObjectName("title")
-            self.title.setWordWrap(True)
-            self.meta = QLabel("Pick a station from the directory.")
+            self.song = ElideLabel("", "#f4f1ea", 15, QFont.Weight.Medium)
+            self.song.setObjectName("song")
+            self.song.hide()
+            self.who = ElideLabel("", "#e8a04a", 13, QFont.Weight.Normal)
+            self.who.setObjectName("who")
+            self.who.hide()
+            self.meta = ElideLabel("Pick a station from the directory.", "#8d877f", 13, QFont.Weight.Normal)
             self.meta.setObjectName("meta")
-            self.meta.setWordWrap(True)
             self.err = QLabel("")
+            self.err.setObjectName("err")
             self.err.setWordWrap(True)
             self.err.hide()
+            identity.addStretch(1)
+            identity.addWidget(self.eyebrow)
+            identity.addWidget(self.title)
+            identity.addWidget(self.song)
+            identity.addWidget(self.who)
+            identity.addWidget(self.meta)
+            identity.addWidget(self.err)
+            identity.addStretch(1)
+
             transport = QHBoxLayout()
+            transport.setSpacing(4)
             prev = quiet(QPushButton("Prev"))
+            prev.setObjectName("transport")
             prev.clicked.connect(lambda: self.step(-1))
             self.play_btn = quiet(QPushButton("▶"))
             self.play_btn.setObjectName("play")
             self.play_btn.clicked.connect(self.toggle)
             nxt = quiet(QPushButton("Next"))
+            nxt.setObjectName("transport")
             nxt.clicked.connect(lambda: self.step(1))
             transport.addWidget(prev)
             transport.addWidget(self.play_btn)
             transport.addWidget(nxt)
-            transport.addStretch(1)
             self.elapsed = QLabel("")
             self.elapsed.setObjectName("muted")
-            transport.addWidget(self.elapsed)
+            self.elapsed.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            self.elapsed.setMinimumWidth(44)
+
             vol = QHBoxLayout()
-            self.vol_label = QLabel(str(self.player.volume))
-            self.vol_label.setFixedWidth(28)
+            vol.setSpacing(8)
+            vol_name = QLabel("Volume")
+            vol_name.setObjectName("muted")
             self.vol = QSlider(Qt.Horizontal)
             self.vol.setRange(0, 100)
             self.vol.setValue(self.player.volume)
+            self.vol.setFixedWidth(132)
             self.vol.valueChanged.connect(self.on_volume)
+            self.vol_label = QLabel(str(self.player.volume))
+            self.vol_label.setObjectName("muted")
+            self.vol_label.setFixedWidth(28)
+            self.vol_label.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+            self.mute_btn = quiet(QPushButton("Mute"))
+            self.mute_btn.setObjectName("transport")
+            self.mute_btn.clicked.connect(self.toggle_mute)
+            vol.addWidget(vol_name)
+            vol.addWidget(self.vol)
             vol.addWidget(self.vol_label)
-            vol.addWidget(self.vol, 1)
-            self.route = QLabel("Output · system")
-            self.route.setObjectName("muted")
-            self.route.setWordWrap(True)
+            vol.addWidget(self.mute_btn)
+
+            top.addWidget(self.mark, 0, Qt.AlignVCenter)
+            top.addLayout(identity, 1)
+            top.addLayout(transport)
+            top.addWidget(self.elapsed)
+            top.addLayout(vol)
+
+            sound = QHBoxLayout()
+            sound.setSpacing(8)
+            output_name = QLabel("Output")
+            output_name.setObjectName("muted")
             self.device_box = QComboBox()
+            self.device_box.setMinimumWidth(180)
             self.device_box.addItem("System default", "auto")
             self.device_box.currentIndexChanged.connect(self.on_device)
+            self.balance_label = QLabel(self._balance_text())
+            self.balance_label.setObjectName("muted")
             self.balance = QSlider(Qt.Horizontal)
             self.balance.setRange(-10, 10)
             self.balance.setValue(int(round(self.player.balance * 10)))
+            self.balance.setFixedWidth(128)
             self.balance.valueChanged.connect(self.on_balance)
-            self.balance_label = QLabel(self._balance_text())
-            self.balance_label.setObjectName("muted")
+            tone_name = QLabel("Tone")
+            tone_name.setObjectName("muted")
             self.eq_box = QComboBox()
+            self.eq_box.setMinimumWidth(108)
             for key, label in EQS:
                 self.eq_box.addItem(label, key)
             index = self.eq_box.findData(self.player.eq)
             if index >= 0:
                 self.eq_box.setCurrentIndex(index)
             self.eq_box.currentIndexChanged.connect(self.on_eq)
-            side.addWidget(self.eyebrow)
-            side.addWidget(self.mark)
-            side.addWidget(self.title)
-            side.addWidget(self.meta)
-            side.addWidget(self.err)
-            side.addStretch(1)
-            side.addLayout(transport)
-            side.addLayout(vol)
-            side.addWidget(self._rule())
-            side.addWidget(QLabel("Output"))
-            side.addWidget(self.device_box)
-            side.addWidget(self.balance_label)
-            side.addWidget(self.balance)
-            side.addWidget(QLabel("Tone"))
-            side.addWidget(self.eq_box)
-            side.addWidget(self.route)
-            body.addWidget(stage)
+            self.sleep_btn = quiet(QPushButton("Sleep"))
+            self.sleep_btn.setObjectName("transport")
+            self.sleep_btn.clicked.connect(self.cycle_sleep)
+            sound.addWidget(output_name)
+            sound.addWidget(self.device_box, 1)
+            sound.addWidget(self.balance_label)
+            sound.addWidget(self.balance)
+            sound.addWidget(tone_name)
+            sound.addWidget(self.eq_box)
+            sound.addWidget(self.sleep_btn)
+            self.route = QLabel("Output · system")
+            self.route.setObjectName("muted")
+            self.route.hide()
+
+            side.addLayout(top)
+            side.addLayout(sound)
             self._sync_route_label()
+            return stage
 
         def _rule(self):
             rule = QFrame()
@@ -540,12 +657,14 @@ def main(argv=None):
             for index, station in enumerate(rows):
                 item = QListWidgetItem()
                 item.setData(Qt.UserRole, station["id"])
-                item.setSizeHint(QSize(0, 64))
+                item.setSizeHint(QSize(0, 68))
                 self.list.addItem(item)
                 self.list.setItemWidget(item, self._row(station, index, station["id"] in saved))
             if rows:
                 self.list.setCurrentRow(self.selected)
             self.list.blockSignals(False)
+            self._shown_playing = None
+            self._paint_badges()
             self.scope_buttons["saved"].setText(f"Saved  {len(self.lib['favorites']) or ''}".strip())
             self.scope_buttons["mine"].setText(f"Mine  {len(self.lib['custom']) or ''}".strip())
             label = {"dial": "DIRECTORY", "saved": "SAVED", "mine": "YOUR STREAMS"}[self.scope]
@@ -556,7 +675,30 @@ def main(argv=None):
 
         @staticmethod
         def _row_style(selected):
-            return "background:#161616;border-radius:12px;" if selected else "background:transparent;"
+            return "background:#161616;border-radius:10px;" if selected else "background:transparent;"
+
+        @staticmethod
+        def _badge_style(live):
+            if live:
+                return "background:#f4f1ea;color:#141414;border-radius:10px;font-size:11px;font-weight:650;"
+            return "background:#1a1a1a;color:#cfc8be;border-radius:10px;font-size:11px;font-weight:650;"
+
+        def _paint_badges(self):
+            playing_id = None
+            if self.current and self.status in ("playing", "connecting"):
+                playing_id = self.current["id"]
+            if playing_id == getattr(self, "_shown_playing", None):
+                return
+            self._shown_playing = playing_id
+            for row in range(self.list.count()):
+                item = self.list.item(row)
+                widget = self.list.itemWidget(item) if item is not None else None
+                if widget is None or not shiboken6.isValid(widget):
+                    continue
+                badge = widget.findChild(QLabel, "badge")
+                if badge is None or not shiboken6.isValid(badge):
+                    continue
+                badge.setStyleSheet(self._badge_style(item.data(Qt.UserRole) == playing_id))
 
         def _style_row(self, row, selected):
             item = self.list.item(row) if row >= 0 else None
@@ -568,26 +710,34 @@ def main(argv=None):
             wrap = QWidget()
             wrap.setStyleSheet(self._row_style(index == self.selected))
             box = QHBoxLayout(wrap)
-            box.setContentsMargins(12, 6, 6, 6)
+            box.setContentsMargins(12, 8, 8, 8)
+            box.setSpacing(12)
+            badge = QLabel(monogram(station["name"]))
+            badge.setObjectName("badge")
+            badge.setAlignment(Qt.AlignCenter)
+            badge.setFixedSize(36, 36)
+            live = self.current is not None and station["id"] == self.current.get("id") and self.status in ("playing", "connecting")
+            badge.setStyleSheet(self._badge_style(live))
             text = QVBoxLayout()
-            text.setSpacing(2)
-            title = QLabel(station["name"])
-            title.setStyleSheet("font-size:15px;font-weight:500;background:transparent;")
-            sub = QLabel(place_line(station))
-            sub.setStyleSheet("color:#8e8880;font-size:12px;background:transparent;")
+            text.setSpacing(0)
+            text.setContentsMargins(0, 0, 0, 0)
+            title = ElideLabel(station["name"], "#f4f1ea", 15, QFont.Weight.Medium)
+            sub = ElideLabel(place_line(station), "#8d877f", 12, QFont.Weight.Normal)
             text.addWidget(title)
             text.addWidget(sub)
+            box.addWidget(badge)
             box.addLayout(text, 1)
             rate = station.get("bitrate")
             if rate:
-                meta = QLabel(f"{rate}")
-                meta.setStyleSheet("color:#6f6a64;font-size:11px;background:transparent;")
+                meta = QLabel(str(rate))
+                meta.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
+                meta.setStyleSheet("color:#6a655f;font-size:11px;background:transparent;")
                 box.addWidget(meta)
             star = quiet(QPushButton("★" if saved else "☆"))
             star.setFlat(True)
             star.setFixedWidth(32)
             star.setStyleSheet(
-                "color:#f5f2ec;font-size:13px;background:transparent;" if saved else "color:#6f6a64;background:transparent;"
+                "color:#f4f1ea;font-size:14px;background:transparent;" if saved else "color:#6a655f;background:transparent;"
             )
             star.clicked.connect(lambda _=False, i=index: self.toggle_saved(i))
             box.addWidget(star)
@@ -685,6 +835,8 @@ def main(argv=None):
             self.status = "connecting"
             self.error = ""
             self.started = None
+            self.track_artist = ""
+            self.track_title = ""
             self.refresh_stage()
             self.play_token += 1
             token = self.play_token
@@ -940,10 +1092,13 @@ def main(argv=None):
             self.eyebrow.setText(labels.get(self.status, "QUIET"))
             self.header_status.setText(labels.get(self.status, "QUIET"))
             self.mark.setText(monogram(station["name"]) if station else "·")
-            self.mark.setProperty("live", "true" if self.status == "playing" else "false")
-            self.mark.style().unpolish(self.mark)
-            self.mark.style().polish(self.mark)
+            live = "true" if self.status == "playing" else "false"
+            for widget in (self.mark, self.eyebrow, self.header_status):
+                widget.setProperty("live", live)
+                widget.style().unpolish(widget)
+                widget.style().polish(widget)
             self.title.setText(station["name"] if station else "No station")
+            self._show_track()
             self.meta.setText(tech_line(station) if station else "Pick a station from the directory.")
             if self.error:
                 self.err.setText(self.error)
@@ -956,6 +1111,19 @@ def main(argv=None):
                 self.elapsed.setText(f"{seconds // 60}:{seconds % 60:02d}")
             else:
                 self.elapsed.setText("")
+            self._paint_badges()
+
+        def _show_track(self):
+            if self.track_title:
+                self.song.setText(self.track_title)
+                self.song.show()
+            else:
+                self.song.hide()
+            if self.track_artist:
+                self.who.setText(self.track_artist)
+                self.who.show()
+            else:
+                self.who.hide()
 
         def tick(self):
             if self._closing:
@@ -970,12 +1138,22 @@ def main(argv=None):
                     self.status = "paused"
                     self.refresh_stage()
             if self.status == "playing":
+                track = None
                 with self._try_lock() as got:
-                    alive = self.player.alive() if got else True
+                    if got:
+                        alive = self.player.alive()
+                        if alive and self.current:
+                            track = self.player.track(self.current.get("name") or "")
+                    else:
+                        alive = True
                 if not alive:
                     self.status = "error"
                     self.error = "The stream ended."
                     self.started = None
+                    self.track_artist = ""
+                    self.track_title = ""
+                elif track is not None and (track[0] or track[1]) and track != (self.track_artist, self.track_title):
+                    self.track_artist, self.track_title = track
                 self.refresh_stage()
 
         def keyPressEvent(self, event: QKeyEvent):
@@ -1044,18 +1222,18 @@ def main(argv=None):
     app = QApplication(argv)
     app.setApplicationName("Vela")
     app.setStyle("Fusion")
-    app.setFont(QFont("Sans Serif", 11))
+    app.setFont(QFont("Adwaita Sans", 11))
     ink = QPalette()
     ink.setColor(QPalette.Window, QColor("#0c0c0c"))
-    ink.setColor(QPalette.WindowText, QColor("#f5f2ec"))
-    ink.setColor(QPalette.Base, QColor("#171717"))
-    ink.setColor(QPalette.AlternateBase, QColor("#111111"))
-    ink.setColor(QPalette.Text, QColor("#f5f2ec"))
+    ink.setColor(QPalette.WindowText, QColor("#f4f1ea"))
+    ink.setColor(QPalette.Base, QColor("#141414"))
+    ink.setColor(QPalette.AlternateBase, QColor("#101010"))
+    ink.setColor(QPalette.Text, QColor("#f4f1ea"))
     ink.setColor(QPalette.Button, QColor("#171717"))
-    ink.setColor(QPalette.ButtonText, QColor("#f5f2ec"))
+    ink.setColor(QPalette.ButtonText, QColor("#f4f1ea"))
     ink.setColor(QPalette.Highlight, QColor("#242424"))
-    ink.setColor(QPalette.HighlightedText, QColor("#f5f2ec"))
-    ink.setColor(QPalette.PlaceholderText, QColor("#6f6a64"))
+    ink.setColor(QPalette.HighlightedText, QColor("#f4f1ea"))
+    ink.setColor(QPalette.PlaceholderText, QColor("#6a655f"))
     app.setPalette(ink)
     app.setStyleSheet(QSS)
     window = Window()

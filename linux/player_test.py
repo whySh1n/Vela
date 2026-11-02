@@ -219,5 +219,45 @@ class SafeUrlTest(unittest.TestCase):
                 self.assertEqual(player.safe_url(url), url)
 
 
+class TrackParseTest(unittest.TestCase):
+    def test_icy_title_splits_artist_and_song(self):
+        self.assertEqual(player.parse_track({"icy-title": "Miles Davis - So What"}), ("Miles Davis", "So What"))
+
+    def test_separate_tags_stay_separate(self):
+        self.assertEqual(
+            player.parse_track({"artist": "The Band", "title": "The Weight - Live"}),
+            ("The Band", "The Weight - Live"),
+        )
+
+    def test_song_without_an_artist(self):
+        self.assertEqual(player.parse_track({"icy-title": "So What"}), ("", "So What"))
+
+    def test_em_dash_and_quotes(self):
+        self.assertEqual(
+            player.parse_track({"icy-title": '"Bill Evans – Waltz for Debby"'}),
+            ("Bill Evans", "Waltz for Debby"),
+        )
+
+    def test_station_name_is_not_the_song(self):
+        self.assertEqual(
+            player.parse_track({"icy-title": "MANGORADIO", "icy-name": "MANGORADIO"}, station="MANGORADIO"),
+            ("", ""),
+        )
+        self.assertEqual(
+            player.parse_track({"icy-title": "MANGORADIO - So What"}, station="MANGORADIO"),
+            ("", "So What"),
+        )
+
+    def test_blank_unknown_and_codec_are_ignored(self):
+        self.assertEqual(player.parse_track(None), ("", ""))
+        self.assertEqual(player.parse_track({"icy-title": "Unknown"}), ("", ""))
+        self.assertEqual(player.parse_track("mp3", "mp3"), ("", ""))
+        self.assertEqual(player.parse_track({}, "https://radio.example/live"), ("", ""))
+
+    def test_media_title_fills_in_when_metadata_is_empty(self):
+        self.assertEqual(player.parse_track({}, "Portishead - Roads", "FIP"), ("Portishead", "Roads"))
+        self.assertEqual(player.parse_track({"icy-name": "FIP"}, "FIP", "FIP"), ("", ""))
+
+
 if __name__ == "__main__":
     unittest.main()
