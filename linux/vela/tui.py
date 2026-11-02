@@ -81,6 +81,8 @@ class App:
         self._play_token = 0
         self._played = queue.SimpleQueue()
         self._play_lock = threading.Lock()
+        self.track_artist = ""
+        self.track_title = ""
 
     def visible(self):
         if self.scope == "saved":
@@ -191,6 +193,8 @@ class App:
         station = rows[index]
         self.current = station
         self.note = f"tuning {station['name']}…"
+        self.track_artist = ""
+        self.track_title = ""
         self.start_play(station["streamUrl"], allow_private=bool(station.get("custom")))
 
     def clamp(self):
@@ -271,6 +275,12 @@ class App:
         if self.current and self.started and not self.player.alive() and not self.player.paused and not self.error:
             self.error = "The stream ended."
             self.started = None
+            self.track_artist = ""
+            self.track_title = ""
+        elif self.player.alive() and self.current and not self.tuning:
+            artist, title = self.player.track(self.current.get("name") or "")
+            if artist or title:
+                self.track_artist, self.track_title = artist, title
 
 
 def init_colors():
@@ -335,7 +345,7 @@ def draw(stdscr, app: App):
 
     rows = app.visible()
     list_top = 4
-    list_bottom = height - 6
+    list_bottom = height - 7
     app.row_origin = list_top
     if app.help:
         lines = [
@@ -385,8 +395,12 @@ def draw(stdscr, app: App):
             put(stdscr, y, 0, line, attr)
             put(stdscr, y, max(0, width - 8), rate, muted)
 
-    now_y = height - 5
+    now_y = height - 6
     name = app.current["name"] if app.current else "nothing on the air"
+    if app.track_artist and app.track_title:
+        track = f"{app.track_artist} — {app.track_title}"
+    else:
+        track = app.track_title or app.track_artist
     detail = place_line(app.current) if app.current else "pick a station"
     vol = 0 if app.player.muted else app.player.volume
     listened = ""
@@ -400,10 +414,11 @@ def draw(stdscr, app: App):
     state = "tuning" if app.tuning else "paused" if app.player.paused else "playing" if app.player.alive() else "idle"
     put(stdscr, now_y, 0, "now", muted)
     put(stdscr, now_y + 1, 0, name, amber if app.player.alive() else 0)
+    put(stdscr, now_y + 2, 0, track, amber if track else 0)
     route = app.player.route_label()
     if route:
         detail = f"{detail}  ·  {route}"
-    put(stdscr, now_y + 2, 0, f"{detail}  ·  {state}  ·  vol {vol}{sleep}{listened}", muted)
+    put(stdscr, now_y + 3, 0, f"{detail}  ·  {state}  ·  vol {vol}{sleep}{listened}", muted)
     footer_note = app.error or app.note
     put(stdscr, height - 2, 0, footer_note, amber if app.error else muted)
     put(stdscr, height - 1, 0, "j k move   enter play   f save   space pause   / search   q quit", muted)

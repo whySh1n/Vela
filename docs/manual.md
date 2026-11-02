@@ -8,7 +8,7 @@ Vela is the Linux player. Install and both programs are in the [Linux manual](li
 
 - Search, country, and the genre chips change the directory.
 - **Dial**, **Saved**, and **Mine** are the three lists. **Add** puts your own stream in Mine.
-- Click a row to play. The amber button pauses. A star saves.
+- Click a row to play. The round button pauses. A star saves. What is playing sits along the bottom, including the artist and the song when the station sends them.
 - **Output**, **Balance**, and **Tone** are sent to mpv. They stay after you quit.
 - **Sleep** is 15, 30, 45, 60, or 90 minutes, then off.
 
